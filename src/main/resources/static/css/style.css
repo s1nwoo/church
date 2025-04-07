@@ -1,0 +1,29 @@
+<style>
+.intro-section {
+            background: url('/images/intro-background.jpg') no-repeat center center;
+            background-size: cover;
+            height: 600px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .text-box {
+            background-color: rgba(0, 0, 0, 0.5);
+            padding: 40px;
+            border-radius: 8px;
+            text-align: center;
+        }
+
+        .text-box h1, .text-box h2, .text-box p {
+            color: #fff;
+        }
+
+        .navbar {
+          padding-top: 20px;
+          padding-bottom: 20px;
+        }
+        .navbar-nav {
+  margin: 0 auto;
+}
+</style>
