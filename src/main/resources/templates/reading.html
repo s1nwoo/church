@@ -1,0 +1,130 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <title>성경 타자 연습</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+    <style>
+        #verseContainer span {
+            font-weight: bold;
+        }
+    </style>
+</head>
+<body class="container py-5">
+
+<!-- ✅ CSRF 토큰 숨김 필드 (Ajax용) -->
+<input type="hidden" id="_csrf" th:value="${_csrf.token}" th:name="${_csrf.parameterName}" />
+
+<h4 class="mb-3" id="currentKey" th:text="${currentKey}">창1:1</h4>
+
+<!-- ✅ 오타 하이라이트용 div -->
+<div id="verseContainer" class="mb-3" style="font-size: 1.2rem; font-weight: 500;">
+    정답 구절이 여기에 표시됩니다.
+</div>
+
+<!-- ✅ 숨겨진 구절 텍스트 전달 -->
+<div id="correctText" th:text="${verseText}" style="display: none;"></div>
+
+<!-- ✅ 사용자 입력 -->
+<input type="text" name="typedText" id="typedText" class="form-control" placeholder="본문을 그대로 입력하세요" required>
+
+<!-- ✅ 다음 구절 버튼 (Ajax로 처리) -->
+<button type="button" id="nextBtn" class="btn btn-primary mt-3" disabled>다음 구절로</button>
+
+<p class="mt-2">
+    진행현황: <span id="progressStatus" th:text="${currentIndex} + '/' + ${totalCount}">0/0</span>
+</p>
+
+<!-- ✅ 축하 메시지 -->
+<div id="congratsMessage" class="alert alert-success mt-3" style="display:none;">
+    🎉 모든 구절을 완료했습니다! 수고하셨습니다 🎉
+</div>
+
+<script>
+    const inputBox = document.getElementById('typedText');
+    const nextBtn = document.getElementById('nextBtn');
+    const verseContainer = document.getElementById('verseContainer');
+    const currentKeyLabel = document.getElementById('currentKey');
+    let correctText = document.getElementById('correctText').innerText;
+    const progressBar = document.getElementById('progressBar');
+    const remainingCount = document.getElementById('remainingCount');
+    const congratsMessage = document.getElementById('congratsMessage');
+    const csrfToken = document.getElementById('_csrf').value;
+
+    // ✅ 페이지 처음 로딩 시 구절 표시
+    window.addEventListener('DOMContentLoaded', () => {
+        console.log("정답 구절:", correctText); // 콘솔에서 확인용
+        verseContainer.textContent = correctText;
+    });
+
+    function normalize(text) {
+        return text.normalize('NFC').trim();
+    }
+
+    function checkTyping() {
+        const typed = normalize(inputBox.value);
+        const original = normalize(correctText);
+
+        let resultHTML = "";
+        let isCorrect = true;
+
+        for (let i = 0; i < original.length; i++) {
+            const correctChar = original[i];
+            const typedChar = typed[i];
+
+            if (typedChar === undefined) {
+                resultHTML += `<span style="color:red;">${correctChar}</span>`;
+                isCorrect = false;
+            } else if (typedChar === correctChar) {
+                resultHTML += `<span>${correctChar}</span>`;
+            } else {
+                resultHTML += `<span style="color:red;">${correctChar}</span>`;
+                isCorrect = false;
+            }
+        }
+
+        verseContainer.innerHTML = resultHTML;
+        nextBtn.disabled = !isCorrect;
+    }
+
+    inputBox.addEventListener('keydown', function (e) {
+        if (e.key === 'Enter') {
+            e.preventDefault();
+            checkTyping();
+        }
+    });
+    inputBox.addEventListener('focusout', checkTyping);
+
+    nextBtn.addEventListener('click', () => {
+        fetch('/reading/next-ajax', {
+            method: 'POST',
+            headers: {
+                'X-CSRF-TOKEN': csrfToken
+            }
+        })
+        .then(res => res.json())
+        .then(data => {
+            correctText = data.verseText;
+            document.getElementById('correctText').innerText = correctText;
+            currentKeyLabel.innerText = data.currentKey;
+            inputBox.value = "";
+            verseContainer.textContent = correctText;
+
+            // ✅ 진행현황 텍스트 동적 업데이트
+            document.getElementById('progressStatus').textContent = data.currentIndex + '/' + data.totalCount;
+
+            if (data.isFinished) {
+                congratsMessage.style.display = "block";
+                nextBtn.disabled = true;
+            } else {
+                congratsMessage.style.display = "none";
+                nextBtn.disabled = true;
+            }
+        });
+    });
+</script>
+
+
+</body>
+</html>
