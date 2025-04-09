@@ -13,11 +13,31 @@ repositories {
 }
 
 dependencies {
+    // 🌐 Spring Web - 웹 애플리케이션(컨트롤러, API 등)을 만들기 위한 필수 의존성
     implementation 'org.springframework.boot:spring-boot-starter-web'
+
+    // 🖼️ Thymeleaf - HTML 화면(View)을 템플릿 엔진으로 렌더링하는 데 사용됨
     implementation 'org.springframework.boot:spring-boot-starter-thymeleaf'
-    testImplementation 'org.springframework.boot:spring-boot-starter-test'
+
+    // ✅ Spring Security - 로그인, 권한 관리 등 보안 기능을 위한 의존성
+    implementation 'org.springframework.boot:spring-boot-starter-security'
+
+    // 🔁 개발 편의 기능 - 코드 수정 후 서버 자동 재시작 등
     developmentOnly 'org.springframework.boot:spring-boot-devtools'
+
+    // 🧪 테스트 관련 - 단위 테스트, 통합 테스트에 필요한 의존성
+    testImplementation 'org.springframework.boot:spring-boot-starter-test'
+
+    // 🔐 Thymeleaf에서 Spring Security 정보(로그인/권한 등)를 사용 가능하게 해주는 확장 라이브러리
+    implementation 'org.thymeleaf.extras:thymeleaf-extras-springsecurity6'
+
+    // ✅ Lombok 컴파일용
+    compileOnly 'org.projectlombok:lombok:1.18.30'
+
+    // ✅ IDE용 프로세서
+    annotationProcessor 'org.projectlombok:lombok:1.18.30'
 }
+
 
 test {
     useJUnitPlatform()
