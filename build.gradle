@@ -36,10 +36,25 @@ dependencies {
 
     // ✅ IDE용 프로세서
     annotationProcessor 'org.projectlombok:lombok:1.18.30'
+
+    // 🧱 JPA (데이터베이스 연동 및 ORM 기능 제공)
+    implementation 'org.springframework.boot:spring-boot-starter-data-jpa'
+
+    // 🛢️ MySQL JDBC 드라이버 (MySQL과 연결하기 위해 필요)
+    runtimeOnly 'com.mysql:mysql-connector-j'
+
+    // ✅ 단위 테스트용 (JUnit 5 - Jupiter)
+    testImplementation 'org.springframework.boot:spring-boot-starter-test'
+
+    // ✅ AssertJ (가독성 좋은 테스트 assertion)
+    testImplementation 'org.assertj:assertj-core:3.24.2'
+
+    // ✅ JPA 테스트용 (H2 기반, 슬라이스 테스트)
+    testImplementation 'org.springframework.boot:spring-boot-test-autoconfigure'
+
 }
 
 
 test {
-    useJUnitPlatform()
+    useJUnitPlatform() // JUnit5 사용하도록 명시
 }
-
