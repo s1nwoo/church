@@ -1,0 +1,133 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <link rel="stylesheet" href="/css/game_rain.css">
+    <title>성경구절 타자 게임</title>
+
+</head>
+<body>
+<header>
+    <div>✨ 성경구절 타자 게임 ✨</div>
+    <div id="scoreBoard">
+        <div id="score">점수: 0</div>
+        <div id="hearts">❤️❤️❤️</div>
+    </div>
+</header>
+
+<div id="gameArea">
+    <!-- 떨어지는 구절은 JS에서 동적으로 추가됨 -->
+</div>
+
+<div id="inputArea">
+    <input type="text" id="verseInput" placeholder="구절을 입력하세요..."/>
+</div>
+
+<script>
+    // 난이도 읽기
+    const urlParams = new URLSearchParams(window.location.search);
+    const level = urlParams.get('level') || 'easy';
+
+    // 난이도 설정
+    let verseFallSpeed = 10;
+    if (level === 'normal') verseFallSpeed = 9;
+    if (level === 'hard') verseFallSpeed = 8;
+
+    const verseSpeedMs = verseFallSpeed * 1000;
+
+    const gameArea = document.getElementById('gameArea');
+    const scoreEl = document.getElementById('score');
+    const heartsEl = document.getElementById('hearts');
+    const inputEl = document.getElementById('verseInput');
+
+    let score = 0;
+    let lives = 3;
+    const activeVerses = new Set();
+    const seenVerses = new Set(); // 전체 중복 방지
+
+    function updateScore() {
+      scoreEl.textContent = "점수: " + score;
+    }
+
+    function updateHearts() {
+      heartsEl.innerHTML = '❤️'.repeat(lives);
+      if (lives <= 0) {
+        alert("게임 오버! 점수: " + score);
+        location.href = '/game/rain';
+      }
+    }
+
+    async function fetchRandomVerse() {
+      let attempt = 0;
+      const maxTries = 10;
+
+      while (attempt < maxTries) {
+        try {
+          const res = await fetch('/api/game/rain/verse?level=' + level);
+          const text = (await res.text()).trim();
+          if (!seenVerses.has(text)) {
+            seenVerses.add(text);
+            return text;
+          }
+          attempt++;
+        } catch (e) {
+          console.error('구절 가져오기 실패:', e);
+          return '에러 발생';
+        }
+      }
+
+      return '더 이상 새로운 구절이 없습니다.';
+    }
+
+    async function spawnVerse() {
+      const verseText = await fetchRandomVerse();
+      if (activeVerses.has(verseText)) return;
+      activeVerses.add(verseText);
+
+      const verse = document.createElement('div');
+      verse.className = 'verse';
+      verse.textContent = verseText;
+
+      // 위치: 화면 좌우 10% ~ 70% 내 랜덤
+      verse.style.left = Math.random() * 60 + 10 + '%';
+      verse.style.animation = `fall ${verseFallSpeed}s linear forwards`;
+
+      gameArea.appendChild(verse);
+
+      setTimeout(() => {
+        if (gameArea.contains(verse)) {
+          gameArea.removeChild(verse);
+          activeVerses.delete(verseText);
+          lives--;
+          updateHearts();
+        }
+      }, verseSpeedMs);
+    }
+
+    inputEl.addEventListener('keydown', function (e) {
+      if (e.key === 'Enter') {
+        const input = inputEl.value.trim();
+        const verses = document.querySelectorAll('.verse');
+        let found = false;
+
+        verses.forEach(v => {
+          if (v.textContent === input) {
+            gameArea.removeChild(v);
+            activeVerses.delete(v.textContent);
+            score++;
+            updateScore();
+            found = true;
+          }
+        });
+
+        if (found) inputEl.value = '';
+      }
+    });
+
+    setInterval(spawnVerse, 3000);
+</script>
+
+
+
+</body>
+</html>

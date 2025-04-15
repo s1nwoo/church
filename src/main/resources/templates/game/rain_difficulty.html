@@ -1,0 +1,74 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8">
+  <title>성경 타자 게임 - 난이도 선택</title>
+  <link rel="stylesheet" href="/css/game_rain.css">
+  <style>
+    .difficulty-container {
+      max-width: 600px;
+      margin: 80px auto;
+      text-align: center;
+    }
+
+    .difficulty-option {
+      margin: 20px 0;
+      padding: 20px;
+      border: 1px solid #ccc;
+      border-radius: 12px;
+      background-color: #f9f9f9;
+    }
+
+    .difficulty-option:hover {
+      background-color: #e8f5ff;
+    }
+
+    .difficulty-option h2 {
+      margin-bottom: 10px;
+    }
+
+    .difficulty-option p {
+      margin: 0;
+      font-size: 14px;
+      color: #555;
+    }
+
+    a.button {
+      display: inline-block;
+      margin-top: 10px;
+      padding: 10px 20px;
+      background-color: #005577;
+      color: white;
+      text-decoration: none;
+      border-radius: 8px;
+    }
+
+    a.button:hover {
+      background-color: #003f5c;
+    }
+  </style>
+</head>
+<body>
+<div class="difficulty-container">
+  <h1>난이도를 선택하세요</h1>
+
+  <div class="difficulty-option">
+    <h2>쉬움</h2>
+    <p>느린 속도 + 짧은 구절</p>
+    <a class="button" href="/game/rain/play?level=easy">선택</a>
+  </div>
+
+  <div class="difficulty-option">
+    <h2>보통</h2>
+    <p>보통 속도 + 중간 길이 구절</p>
+    <a class="button" href="/game/rain/play?level=normal">선택</a>
+  </div>
+
+  <div class="difficulty-option">
+    <h2>어려움</h2>
+    <p>빠른 속도 + 긴 구절</p>
+    <a class="button" href="/game/rain/play?level=hard">선택</a>
+  </div>
+</div>
+</body>
+</html>
