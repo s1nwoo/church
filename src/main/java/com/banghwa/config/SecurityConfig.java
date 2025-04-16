@@ -2,6 +2,7 @@ package com.banghwa.config;
 
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.http.HttpMethod;
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.web.SecurityFilterChain;
@@ -18,28 +19,29 @@ public class SecurityConfig {
 
     @Bean
     public SecurityFilterChain filterChain(HttpSecurity http) throws Exception {
-        // 📌 보안 규칙을 설정하는 부분
         http
+                .csrf(csrf -> csrf.disable())
                 .authorizeHttpRequests(auth -> auth
-                        // ✅ 로그인 없이 접근 허용할 경로 설정 (css, 이미지, 홈화면 등)
-                        .requestMatchers("/", "/login", "/doLogin", "/css/**", "/images/**").permitAll()
-                        // ✅ 그 외 모든 요청은 로그인 필요
+                        .requestMatchers("/", "/login", "/css/**", "/images/**").permitAll()
+                        .requestMatchers("/api/posts/**").permitAll()
+                        .requestMatchers(HttpMethod.POST, "/api/posts").permitAll()
+                        .requestMatchers(HttpMethod.POST, "/api/posts/**").permitAll()
                         .anyRequest().authenticated()
                 )
                 .formLogin(login -> login
-                        .loginPage("/login") // 로그인 폼을 보여줄 페이지
-                        .loginProcessingUrl("/doLogin") // 실제 로그인 요청을 처리할 경로 (POST 요청 처리)
-                        .defaultSuccessUrl("/", true) // 로그인 성공 시 이동할 경로
+                        .loginPage("/login")
+                        .loginProcessingUrl("/doLogin")
+                        .defaultSuccessUrl("/", true)
                         .permitAll()
                 )
                 .logout(logout -> logout
-                        // ✅ 로그아웃 성공 시 이동할 경로
                         .logoutSuccessUrl("/login?logout")
                         .permitAll()
                 );
 
         return http.build();
     }
+
 
     @Bean
     public PasswordEncoder passwordEncoder() {
