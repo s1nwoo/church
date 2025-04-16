@@ -24,6 +24,7 @@ public class SecurityConfig {
                 .authorizeHttpRequests(auth -> auth
                         .requestMatchers("/", "/login", "/css/**", "/images/**").permitAll()
                         .requestMatchers("/api/posts/**").permitAll()
+                        .requestMatchers("/api/bible-practice/**").permitAll()
                         .requestMatchers(HttpMethod.POST, "/api/posts").permitAll()
                         .requestMatchers(HttpMethod.POST, "/api/posts/**").permitAll()
                         .anyRequest().authenticated()

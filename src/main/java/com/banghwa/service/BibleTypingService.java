@@ -149,4 +149,36 @@ public class BibleTypingService {
         return verseKeys.size();
     }
 
+    // ✅ 책의 장 목록 반환 (예: 창 → [1,2,3,...])
+    public List<Integer> getChaptersByBook(String bookAbbr) {
+        Set<Integer> chapters = new TreeSet<>();
+        for (String key : fullBible.keySet()) {
+            if (key.startsWith(bookAbbr)) {
+                String[] parts = key.replace(bookAbbr, "").split(":");
+                if (parts.length >= 2) {
+                    try {
+                        chapters.add(Integer.parseInt(parts[0]));
+                    } catch (NumberFormatException ignored) {}
+                }
+            }
+        }
+        return new ArrayList<>(chapters);
+    }
+
+    // ✅ 특정 구절 텍스트 반환 (예: 창1:1)
+    public Map<String, String> getVerse(String bookAbbr, int chapter, int verse) {
+        String key = bookAbbr + chapter + ":" + verse;
+        String content = fullBible.getOrDefault(key, null);
+
+        if (content == null) {
+            throw new IllegalArgumentException("해당 구절을 찾을 수 없습니다: " + key);
+        }
+
+        Map<String, String> result = new LinkedHashMap<>();
+        result.put("key", key);
+        result.put("text", content);
+        return result;
+    }
+
+
 }

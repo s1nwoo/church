@@ -1,4 +1,4 @@
-package com.banghwa.controller.api;
+package com.banghwa.controller.api.post;
 
 import com.banghwa.model.Post;
 import com.banghwa.service.PostService;
