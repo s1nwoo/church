@@ -27,6 +27,9 @@ public class SecurityConfig {
                         .requestMatchers("/api/bible-practice/**").permitAll()
                         .requestMatchers(HttpMethod.POST, "/api/posts").permitAll()
                         .requestMatchers(HttpMethod.POST, "/api/posts/**").permitAll()
+                        .requestMatchers(HttpMethod.POST, "/api/auth/signup").permitAll()
+                        .requestMatchers(HttpMethod.POST, "/api/auth/login").permitAll()
+                        .requestMatchers(HttpMethod.POST, "/api/auth/logout").permitAll()
                         .anyRequest().authenticated()
                 )
                 .formLogin(login -> login
