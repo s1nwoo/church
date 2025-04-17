@@ -33,7 +33,7 @@ public class BiblePracticeApiController {
     // 2) 장 목록 조회
     @GetMapping("/chapters")
     public ResponseEntity<List<Map<String, Object>>> getChapters(
-            @RequestParam String bookCode
+            @RequestParam("bookCode") String bookCode
     ) {
         List<Map<String, Object>> chapters = biblePracticeService.getChaptersByBook(bookCode);
         return ResponseEntity.ok(chapters);
@@ -42,8 +42,8 @@ public class BiblePracticeApiController {
     // 3) 절 목록 조회
     @GetMapping("/verses")
     public ResponseEntity<List<Map<String, Object>>> getVerses(
-            @RequestParam String bookCode,
-            @RequestParam int chapter
+            @RequestParam("bookCode") String bookCode,
+            @RequestParam("chapter")   int    chapter
     ) {
         List<Map<String, Object>> verses = biblePracticeService.getVerses(bookCode, chapter);
         return ResponseEntity.ok(verses);
@@ -52,9 +52,9 @@ public class BiblePracticeApiController {
     // 4) 특정 구절 조회
     @GetMapping("/verse")
     public ResponseEntity<Map<String, Object>> getVerse(
-            @RequestParam String bookCode,
-            @RequestParam int chapter,
-            @RequestParam int verse
+            @RequestParam("bookCode") String bookCode,
+            @RequestParam("chapter")   int    chapter,
+            @RequestParam("verse")     int    verse
     ) {
         Map<String, Object> verseData = biblePracticeService.getVerse(bookCode, chapter, verse);
         return ResponseEntity.ok(verseData);
@@ -88,7 +88,7 @@ public class BiblePracticeApiController {
     // 6) 저장된 진행 위치 조회
     @GetMapping("/progress")
     public Map<String, Object> getProgress(
-            @RequestParam String bookCode,
+            @RequestParam("bookCode") String bookCode,
             HttpSession session
     ) {
         Long userId = (Long) session.getAttribute("userId");
