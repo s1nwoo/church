@@ -1,17 +1,24 @@
 package com.banghwa.service;
 
+import com.banghwa.repository.BibleProgressRepository;
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import jakarta.annotation.PostConstruct;
 import org.springframework.core.io.ClassPathResource;
 import org.springframework.stereotype.Service;
 
+import com.banghwa.model.BibleProgress;
+import com.banghwa.model.User;
+import lombok.RequiredArgsConstructor;
+
 import java.io.InputStream;
 import java.util.*;
 
 @Service
+@RequiredArgsConstructor
 public class BiblePracticeService {
 
+    private final BibleProgressRepository bibleProgressRepository;
     private Map<String, String> bibleVerses;
     private List<Map<String, String>> bibleBooks;
 
@@ -85,4 +92,29 @@ public class BiblePracticeService {
         result.put("text", text);
         return result;
     }
+
+    // [기능] 성경 연습 위치 저장 또는 갱신
+    // [설명] 사용자가 특정 책에서 마지막으로 완료한 장/절을 기록
+    public void saveOrUpdateProgress(User user, String bookCode, int chapter, int verse) {
+        Optional<BibleProgress> optional = bibleProgressRepository.findByUserAndBookCode(user, bookCode);
+
+        BibleProgress progress = optional.orElse(
+                BibleProgress.builder()
+                        .user(user)
+                        .bookCode(bookCode)
+                        .build()
+        );
+
+        progress.setChapter(chapter);
+        progress.setVerse(verse);
+
+        bibleProgressRepository.save(progress);
+    }
+
+    // [기능] 저장된 성경 연습 위치 불러오기
+    // [설명] 사용자가 특정 책에서 어디까지 연습했는지 반환
+    public Optional<BibleProgress> getProgress(User user, String bookCode) {
+        return bibleProgressRepository.findByUserAndBookCode(user, bookCode);
+    }
+
 }

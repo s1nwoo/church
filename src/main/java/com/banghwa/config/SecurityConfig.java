@@ -6,30 +6,38 @@ import org.springframework.http.HttpMethod;
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.web.SecurityFilterChain;
-import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
-
+import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.security.core.userdetails.User;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.provisioning.InMemoryUserDetailsManager;
 
-@Configuration // 📌 스프링 설정 클래스라는 표시
-@EnableWebSecurity // 📌 스프링 시큐리티를 사용하겠다는 선언
+@Configuration
+@EnableWebSecurity
 public class SecurityConfig {
 
     @Bean
     public SecurityFilterChain filterChain(HttpSecurity http) throws Exception {
         http
-                .csrf(csrf -> csrf.disable())
+                .cors().and()                      // WebConfig 에 정의한 CORS 설정 활성화
+                .csrf().disable()
                 .authorizeHttpRequests(auth -> auth
-                        .requestMatchers("/", "/login", "/css/**", "/images/**").permitAll()
+                        // 로그인·정적 리소스
+                        .requestMatchers("/", "/login", "/signup", "/css/**", "/images/**").permitAll()
+
+                        // React SPA 라우트 허용
+                        .requestMatchers(HttpMethod.GET,
+                                "/bible-practice", "/bible-practice/**",
+                                "/location",        "/location/**",
+                                "/posts",           "/posts/**"
+                        ).permitAll()
+
+                        // API 엔드포인트
                         .requestMatchers("/api/posts/**").permitAll()
                         .requestMatchers("/api/bible-practice/**").permitAll()
-                        .requestMatchers(HttpMethod.POST, "/api/posts").permitAll()
-                        .requestMatchers(HttpMethod.POST, "/api/posts/**").permitAll()
-                        .requestMatchers(HttpMethod.POST, "/api/auth/signup").permitAll()
-                        .requestMatchers(HttpMethod.POST, "/api/auth/login").permitAll()
-                        .requestMatchers(HttpMethod.POST, "/api/auth/logout").permitAll()
+                        .requestMatchers("/api/auth/**").permitAll()
+
+                        // 그 외는 인증 필요
                         .anyRequest().authenticated()
                 )
                 .formLogin(login -> login
@@ -46,32 +54,25 @@ public class SecurityConfig {
         return http.build();
     }
 
-
     @Bean
     public PasswordEncoder passwordEncoder() {
-        // ✅ 비밀번호 암호화를 위한 설정 (BCrypt는 강력하고 안전한 알고리즘)
         return new BCryptPasswordEncoder();
     }
 
     @Bean
-    public InMemoryUserDetailsManager userDetailsService(PasswordEncoder passwordEncoder) {
-        // ✅ 테스트용 관리자 계정 생성
+    public InMemoryUserDetailsManager userDetailsService(PasswordEncoder pw) {
         UserDetails admin = User.builder()
-                .username("admin") // 로그인 아이디
-                .password(passwordEncoder.encode("1234")) // 로그인 비밀번호 (암호화 적용됨)
-                .roles("ADMIN") // 관리자 권한
+                .username("admin")
+                .password(pw.encode("1234"))
+                .roles("ADMIN")
                 .build();
 
-        // ✅ 일반 교인 계정 생성
         UserDetails member = User.builder()
-                .username("member") // 로그인 아이디
-                .password(passwordEncoder.encode("1234")) // 로그인 비밀번호
-                .roles("USER") // 교인 권한
+                .username("member")
+                .password(pw.encode("1234"))
+                .roles("USER")
                 .build();
 
-        // ✅ 메모리에 두 계정을 등록
         return new InMemoryUserDetailsManager(admin, member);
     }
-
-
 }
