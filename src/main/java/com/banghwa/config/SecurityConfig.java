@@ -36,6 +36,7 @@ public class SecurityConfig {
                         .requestMatchers("/api/posts/**").permitAll()
                         .requestMatchers("/api/bible-practice/**").permitAll()
                         .requestMatchers("/api/auth/**").permitAll()
+                        .requestMatchers("/api/sermons/**").permitAll()
 
                         // 그 외는 인증 필요
                         .anyRequest().authenticated()
