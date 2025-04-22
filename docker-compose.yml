@@ -1,10 +1,10 @@
 services:
   db:
     image: mysql:8.0
-    container_name: church-mysql  # 💡 이름 명시해두면 관리 편리
+    container_name: church-mysql
     environment:
       MYSQL_ROOT_PASSWORD: ${MYSQL_ROOT_PASSWORD}
-      MYSQL_DATABASE: ${MYSQL_DATABASE}
+      MYSQL_DATABASE:      ${MYSQL_DATABASE}
     ports:
       - "3306:3306"
     networks:
@@ -16,18 +16,20 @@ services:
       retries: 5
 
   app:
-    build: .
-    container_name: church-app  # 💡 앱도 명확한 이름
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: church-app
     depends_on:
       db:
         condition: service_healthy
     ports:
       - "8080:8080"
     environment:
-      SPRING_DATASOURCE_URL: ${SPRING_DATASOURCE_URL}
+      SPRING_DATASOURCE_URL:      ${SPRING_DATASOURCE_URL}
       SPRING_DATASOURCE_USERNAME: ${SPRING_DATASOURCE_USERNAME}
       SPRING_DATASOURCE_PASSWORD: ${SPRING_DATASOURCE_PASSWORD}
-      SPRING_PROFILES_ACTIVE : docker
+      SPRING_PROFILES_ACTIVE:     docker
     networks:
       - church-net
 
