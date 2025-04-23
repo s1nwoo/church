@@ -2,26 +2,20 @@ package com.banghwa.controller.api.bible;
 
 import com.banghwa.model.BibleProgress;
 import com.banghwa.model.User;
-import com.banghwa.repository.UserRepository;
 import com.banghwa.service.BiblePracticeService;
-import jakarta.servlet.http.HttpSession;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.*;
 
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
-import java.util.Optional;
+import java.util.*;
 
 @RestController
 @RequestMapping("/api/bible-practice")
-@CrossOrigin(origins = "http://localhost:3000", allowCredentials = "true")
 @RequiredArgsConstructor
 public class BiblePracticeApiController {
 
     private final BiblePracticeService biblePracticeService;
-    private final UserRepository        userRepository;
 
     // 1) 책 목록 조회
     @GetMapping("/books")
@@ -43,7 +37,7 @@ public class BiblePracticeApiController {
     @GetMapping("/verses")
     public ResponseEntity<List<Map<String, Object>>> getVerses(
             @RequestParam("bookCode") String bookCode,
-            @RequestParam("chapter")   int    chapter
+            @RequestParam("chapter")   int chapter
     ) {
         List<Map<String, Object>> verses = biblePracticeService.getVerses(bookCode, chapter);
         return ResponseEntity.ok(verses);
@@ -53,8 +47,8 @@ public class BiblePracticeApiController {
     @GetMapping("/verse")
     public ResponseEntity<Map<String, Object>> getVerse(
             @RequestParam("bookCode") String bookCode,
-            @RequestParam("chapter")   int    chapter,
-            @RequestParam("verse")     int    verse
+            @RequestParam("chapter")   int chapter,
+            @RequestParam("verse")     int verse
     ) {
         Map<String, Object> verseData = biblePracticeService.getVerse(bookCode, chapter, verse);
         return ResponseEntity.ok(verseData);
@@ -64,19 +58,15 @@ public class BiblePracticeApiController {
     @PostMapping("/progress")
     public Map<String, Object> saveProgress(
             @RequestBody Map<String, Object> payload,
-            HttpSession session
+            @AuthenticationPrincipal User user
     ) {
-        Long userId = (Long) session.getAttribute("userId");
-        if (userId == null) {
+        if (user == null) {
             throw new RuntimeException("로그인이 필요합니다.");
         }
 
-        User user = userRepository.findById(userId)
-                .orElseThrow(() -> new RuntimeException("사용자 정보가 없습니다."));
-
         String bookCode = (String) payload.get("bookCode");
-        int    chapter  = (Integer) payload.get("chapter");
-        int    verse    = (Integer) payload.get("verse");
+        int chapter = (Integer) payload.get("chapter");
+        int verse = (Integer) payload.get("verse");
 
         biblePracticeService.saveOrUpdateProgress(user, bookCode, chapter, verse);
 
@@ -89,15 +79,11 @@ public class BiblePracticeApiController {
     @GetMapping("/progress")
     public Map<String, Object> getProgress(
             @RequestParam("bookCode") String bookCode,
-            HttpSession session
+            @AuthenticationPrincipal User user
     ) {
-        Long userId = (Long) session.getAttribute("userId");
-        if (userId == null) {
+        if (user == null) {
             throw new RuntimeException("로그인이 필요합니다.");
         }
-
-        User user = userRepository.findById(userId)
-                .orElseThrow(() -> new RuntimeException("사용자 정보가 없습니다."));
 
         Optional<BibleProgress> opt = biblePracticeService.getProgress(user, bookCode);
 
@@ -105,10 +91,10 @@ public class BiblePracticeApiController {
         if (opt.isPresent()) {
             BibleProgress p = opt.get();
             result.put("chapter", p.getChapter());
-            result.put("verse",   p.getVerse());
+            result.put("verse", p.getVerse());
         } else {
             result.put("chapter", 1);
-            result.put("verse",   1);
+            result.put("verse", 1);
         }
         return result;
     }
