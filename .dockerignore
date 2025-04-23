@@ -1,5 +1,8 @@
-build/
-.gradle/
-.idea/
+# 불필요한 캐시 파일만 제외
 *.iml
-.env
+.gradle/
+build/
+out/
+.idea/
+*.log
+# gradlew는 반드시 포함되도록 유지!
