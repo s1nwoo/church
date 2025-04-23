@@ -1,65 +1,32 @@
 package com.banghwa.controller.api.auth;
 
-import com.banghwa.dto.LoginRequest;
-import com.banghwa.dto.UserInfoResponse;
-import com.banghwa.model.User;
-import com.banghwa.repository.UserRepository;
-import jakarta.servlet.http.HttpSession;
-import lombok.RequiredArgsConstructor;
-import org.springframework.http.ResponseEntity;
-import org.springframework.security.crypto.password.PasswordEncoder;
+import com.banghwa.security.jwt.JwtUtil;
+import org.springframework.security.authentication.AuthenticationManager;
+import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
+import org.springframework.security.core.Authentication;
 import org.springframework.web.bind.annotation.*;
+import java.util.Map;
 
 @RestController
 @RequestMapping("/api/auth")
-@RequiredArgsConstructor
 public class AuthController {
 
-    private final UserRepository userRepository;
-    private final PasswordEncoder passwordEncoder;
+    private final AuthenticationManager authManager;
+    private final JwtUtil jwtUtil;
 
-    // ✅ 로그인 시 사용자 정보 반환
+    public AuthController(AuthenticationManager authManager, JwtUtil jwtUtil) {
+        this.authManager = authManager;
+        this.jwtUtil = jwtUtil;
+    }
+
     @PostMapping("/login")
-    public ResponseEntity<UserInfoResponse> login(@RequestBody LoginRequest request, HttpSession session) {
-        User user = userRepository.findByUsername(request.getUsername())
-                .orElseThrow(() -> new IllegalArgumentException("아이디 또는 비밀번호가 일치하지 않습니다."));
-
-        if (!passwordEncoder.matches(request.getPassword(), user.getPassword())) {
-            throw new IllegalArgumentException("아이디 또는 비밀번호가 일치하지 않습니다.");
-        }
-
-        session.setAttribute("userId", user.getId());
-        session.setAttribute("role", user.getRole().name());
-
-        // ✅ 사용자 정보를 응답으로 전달
-        return ResponseEntity.ok(new UserInfoResponse(
-                user.getName(),
-                user.getUsername(),
-                user.getEmail()
-        ));
-    }
-
-    @PostMapping("/logout")
-    public ResponseEntity<String> logout(HttpSession session) {
-        session.invalidate();
-        return ResponseEntity.ok("로그아웃 완료");
-    }
-
-    @GetMapping("/me")
-    public ResponseEntity<UserInfoResponse> getCurrentUser(HttpSession session) {
-        Long userId = (Long) session.getAttribute("userId");
-
-        if (userId == null) {
-            return ResponseEntity.status(401).build();
-        }
-
-        User user = userRepository.findById(userId)
-                .orElseThrow(() -> new IllegalArgumentException("사용자 정보를 찾을 수 없습니다."));
-
-        return ResponseEntity.ok(new UserInfoResponse(
-                user.getName(),
-                user.getUsername(),
-                user.getEmail()
-        ));
+    public Map<String, String> login(@RequestBody Map<String, String> body) {
+        String username = body.get("username");
+        String password = body.get("password");
+        Authentication auth = authManager.authenticate(
+                new UsernamePasswordAuthenticationToken(username, password)
+        );
+        String token = jwtUtil.generateToken(auth.getName());
+        return Map.of("accessToken", token);
     }
 }
