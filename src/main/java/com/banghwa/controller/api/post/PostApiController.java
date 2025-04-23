@@ -2,6 +2,7 @@ package com.banghwa.controller.api.post;
 
 import com.banghwa.model.Post;
 import com.banghwa.service.PostService;
+import jakarta.annotation.security.RolesAllowed;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
@@ -24,6 +25,7 @@ public class PostApiController {
 
     // [기능] 게시글 등록
     @PostMapping
+    @RolesAllowed("ADMIN")
     public ResponseEntity<Post> createPost(@RequestBody Post post) {
         Post saved = postService.savePost(post);
         return ResponseEntity.ok(saved);

@@ -7,5 +7,6 @@ import lombok.Getter;
 @AllArgsConstructor
 public class UserInfoResponse {
     private String name;
-    private String role;
+    private String username;
+    private String email;
 }

@@ -33,6 +33,7 @@ public class UserService {
                 .email(request.getEmail())
                 .password(passwordEncoder.encode(request.getPassword()))
                 .phoneNumber(request.getPhoneNumber())
+                .gender(request.getGender())
                 .role(UserRole.USER)
                 .createdDate(LocalDateTime.now())
                 .build();

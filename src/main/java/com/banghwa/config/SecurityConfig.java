@@ -3,55 +3,62 @@ package com.banghwa.config;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.http.HttpMethod;
-import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
+import org.springframework.security.config.Customizer;
+import org.springframework.security.config.annotation.method.configuration.EnableMethodSecurity;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
-import org.springframework.security.web.SecurityFilterChain;
+import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.crypto.password.PasswordEncoder;
-import org.springframework.security.core.userdetails.User;
-import org.springframework.security.core.userdetails.UserDetails;
-import org.springframework.security.provisioning.InMemoryUserDetailsManager;
+import org.springframework.security.web.SecurityFilterChain;
+import org.springframework.web.cors.CorsConfiguration;
+import org.springframework.web.cors.CorsConfigurationSource;
+import org.springframework.web.cors.UrlBasedCorsConfigurationSource;
+
+import java.util.List;
 
 @Configuration
 @EnableWebSecurity
+@EnableMethodSecurity(jsr250Enabled = true)
 public class SecurityConfig {
+
+    @Bean
+    public CorsConfigurationSource corsConfigurationSource() {
+        CorsConfiguration c = new CorsConfiguration();
+        c.setAllowedOrigins(List.of("http://localhost:3000"));
+        c.setAllowedMethods(List.of("GET","POST","PUT","DELETE","OPTIONS"));
+        c.setAllowedHeaders(List.of("*"));
+        c.setAllowCredentials(true);
+        UrlBasedCorsConfigurationSource src = new UrlBasedCorsConfigurationSource();
+        src.registerCorsConfiguration("/**", c);
+        return src;
+    }
 
     @Bean
     public SecurityFilterChain filterChain(HttpSecurity http) throws Exception {
         http
-                .cors().and()                      // WebConfig 에 정의한 CORS 설정 활성화
-                .csrf().disable()
+                .cors().and()
+                .csrf(csrf -> csrf.disable())
                 .authorizeHttpRequests(auth -> auth
-                        // 로그인·정적 리소스
-                        .requestMatchers("/", "/login", "/signup", "/css/**", "/images/**").permitAll()
+                        // 로그인, 정적 리소스, 인증 API는 모두 공개
+                        .requestMatchers("/", "/login", "/api/auth/**").permitAll()
 
-                        // React SPA 라우트 허용
-                        .requestMatchers(HttpMethod.GET,
-                                "/bible-practice", "/bible-practice/**",
-                                "/location",        "/location/**",
-                                "/posts",           "/posts/**"
-                        ).permitAll()
+                        // 게시글 조회 열어두기
+                        .requestMatchers(HttpMethod.GET, "/api/posts/**").permitAll()
 
-                        // API 엔드포인트
-                        .requestMatchers("/api/posts/**").permitAll()
-                        .requestMatchers("/api/bible-practice/**").permitAll()
-                        .requestMatchers("/api/auth/**").permitAll()
-                        .requestMatchers("/api/sermons/**").permitAll()
+                        .requestMatchers(HttpMethod.GET, "/api/sermons/**").permitAll()
 
-                        // 그 외는 인증 필요
+                        // 게시글 등록은 로그인 필요 → @RolesAllowed("ADMIN")로 권한 검사
+                        .requestMatchers(HttpMethod.POST, "/api/posts").authenticated()
+
+                        // 나머지 엔드포인트는 전체 로그인 필요
                         .anyRequest().authenticated()
                 )
-                .formLogin(login -> login
-                        .loginPage("/login")
-                        .loginProcessingUrl("/doLogin")
-                        .defaultSuccessUrl("/", true)
-                        .permitAll()
-                )
+                .formLogin(form -> form.disable())
                 .logout(logout -> logout
+                        .logoutUrl("/api/auth/logout")
                         .logoutSuccessUrl("/login?logout")
                         .permitAll()
                 );
-
         return http.build();
     }
 
@@ -59,21 +66,5 @@ public class SecurityConfig {
     public PasswordEncoder passwordEncoder() {
         return new BCryptPasswordEncoder();
     }
-
-    @Bean
-    public InMemoryUserDetailsManager userDetailsService(PasswordEncoder pw) {
-        UserDetails admin = User.builder()
-                .username("admin")
-                .password(pw.encode("1234"))
-                .roles("ADMIN")
-                .build();
-
-        UserDetails member = User.builder()
-                .username("member")
-                .password(pw.encode("1234"))
-                .roles("USER")
-                .build();
-
-        return new InMemoryUserDetailsManager(admin, member);
-    }
 }
+

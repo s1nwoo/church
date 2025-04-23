@@ -37,6 +37,7 @@ public class SermonVideoController {
     }
 
     @PostMapping
+    @RolesAllowed("ADMIN")
     public SermonVideo create(@RequestBody SermonVideo sermon) {
         return sermonVideoService.createSermon(sermon);
     }

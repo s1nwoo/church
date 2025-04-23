@@ -47,4 +47,7 @@ public class User {
     private Boolean deleted = false;
 
     private LocalDateTime deletedDate;
+
+    @Column(nullable = false)
+    private String gender; // "남자" or "여자"
 }
