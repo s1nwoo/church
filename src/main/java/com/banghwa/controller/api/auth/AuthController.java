@@ -23,10 +23,26 @@ public class AuthController {
     public Map<String, String> login(@RequestBody Map<String, String> body) {
         String username = body.get("username");
         String password = body.get("password");
+
         Authentication auth = authManager.authenticate(
                 new UsernamePasswordAuthenticationToken(username, password)
         );
+
         String token = jwtUtil.generateToken(auth.getName());
-        return Map.of("accessToken", token);
+
+        // ✅ UserDetails에서 role 꺼내기
+        org.springframework.security.core.userdetails.User userDetails =
+                (org.springframework.security.core.userdetails.User) auth.getPrincipal();
+
+        String role = userDetails.getAuthorities().stream()
+                .findFirst()
+                .map(autho -> autho.getAuthority()) // 예: "ROLE_ADMIN"
+                .orElse("ROLE_USER");
+
+        return Map.of(
+                "username", userDetails.getUsername(),
+                "role", role,
+                "accessToken", token
+        );
     }
 }

@@ -1,6 +1,6 @@
 package com.banghwa.service;
 
-import com.banghwa.model.User;         // 실제 User 엔티티 경로로 수정하세요
+import com.banghwa.model.User;
 import com.banghwa.repository.UserRepository;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.core.userdetails.UserDetailsService;
@@ -9,7 +9,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import java.util.List;
 
-@Service  // ← 이 어노테이션이 중요합니다!
+@Service
 public class CustomUserDetailsService implements UserDetailsService {
 
     private final UserRepository userRepository;
@@ -24,11 +24,14 @@ public class CustomUserDetailsService implements UserDetailsService {
         User user = userRepository.findByUsername(username)
                 .orElseThrow(() ->
                         new UsernameNotFoundException("사용자를 찾을 수 없습니다: " + username));
-        // 예시: ROLE_USER 권한 하나 부여
+
+        // DB에 저장된 사용자 role 값을 기반으로 권한 부여
+        String role = "ROLE_" + user.getRole(); // 예: ADMIN → ROLE_ADMIN
+
         return org.springframework.security.core.userdetails.User.builder()
                 .username(user.getUsername())
                 .password(user.getPassword())
-                .authorities(List.of(new SimpleGrantedAuthority("ROLE_USER")))
+                .authorities(List.of(new SimpleGrantedAuthority(role)))
                 .build();
     }
 }
