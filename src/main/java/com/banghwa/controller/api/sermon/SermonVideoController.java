@@ -22,12 +22,13 @@ public class SermonVideoController {
      */
     @GetMapping
     public Page<SermonVideo> listSermons(
-            @RequestParam(name = "keyword", defaultValue = "") String keyword,
-            @RequestParam(name = "page",    defaultValue = "0")  int page,
-            @RequestParam(name = "size",    defaultValue = "10") int size
+            @RequestParam(name = "keyword",        defaultValue = "")      String keyword,
+            @RequestParam(name = "page",           defaultValue = "0")     int page,
+            @RequestParam(name = "size",           defaultValue = "10")    int size,
+            @RequestParam(name = "includeDeleted", defaultValue = "false") boolean includeDeleted
     ) {
         Pageable pageable = PageRequest.of(page, size);
-        return sermonVideoService.searchSermons(keyword, pageable);
+        return sermonVideoService.searchSermons(keyword, pageable, includeDeleted);
     }
 
     @GetMapping("/{id}")

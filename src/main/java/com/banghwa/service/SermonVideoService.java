@@ -9,7 +9,7 @@ import java.util.Optional;
 public interface SermonVideoService {
 
     // 영상 목록 조회 (검색 + 페이지네이션 + 정렬 포함)
-    Page<SermonVideo> searchSermons(String keyword, Pageable pageable);
+    Page<SermonVideo> searchSermons(String keyword, Pageable pageable, boolean includeDeleted);
 
     // 영상 단건 조회
     Optional<SermonVideo> getSermon(Long id);
