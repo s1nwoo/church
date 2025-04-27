@@ -1,4 +1,4 @@
-// 📁 위치 예시: com.banghwa.config.WebConfig
+// 📁 위치: com.banghwa.config.WebConfig.java
 
 package com.banghwa.config;
 
@@ -11,9 +11,12 @@ public class WebConfig implements WebMvcConfigurer {
 
     @Override
     public void addCorsMappings(CorsRegistry registry) {
-        registry.addMapping("/api/**") // 🔥 API 경로에만 적용
-                .allowedOrigins("http://localhost:3000") // 🔥 리액트 개발 서버 허용
-                .allowedMethods("GET", "POST", "PUT", "DELETE") // 허용 메서드 지정
-                .allowCredentials(true); // (선택) 쿠키/세션 전달 허용
+        registry.addMapping("/api/**") // 🔥 API 경로에만 CORS 적용
+                .allowedOrigins(
+                        "http://localhost:3000",
+                        "https://church-frontend.vercel.app" // 🔥 네 Vercel 배포 URL 추가
+                )
+                .allowedMethods("GET", "POST", "PUT", "DELETE", "OPTIONS") // 🔥 OPTIONS 추가 (Preflight 요청 대비)
+                .allowCredentials(true);
     }
 }
