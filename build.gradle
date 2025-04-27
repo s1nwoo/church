@@ -63,6 +63,8 @@ dependencies {
     // ✅ JPA 테스트용 (H2 기반, 슬라이스 테스트)
     testImplementation 'org.springframework.boot:spring-boot-test-autoconfigure'
 
+    // ⭐ PostgreSQL 드라이버 추가
+    runtimeOnly 'org.postgresql:postgresql'
 }
 
 test {
