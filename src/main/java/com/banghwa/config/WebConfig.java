@@ -1,5 +1,3 @@
-// 📁 위치: com.banghwa.config.WebConfig.java
-
 package com.banghwa.config;
 
 import org.springframework.context.annotation.Configuration;
@@ -11,12 +9,13 @@ public class WebConfig implements WebMvcConfigurer {
 
     @Override
     public void addCorsMappings(CorsRegistry registry) {
-        registry.addMapping("/api/**") // 🔥 API 경로에만 CORS 적용
-                .allowedOrigins(
-                        "http://localhost:3000",
-                        "https://church-frontend.vercel.app" // 🔥 네 Vercel 배포 URL 추가
+        registry.addMapping("/api/**")
+                // Vercel 모든 서브도메인(Preview, Production 등)과 로컬 허용
+                .allowedOriginPatterns(
+                        "https://*.vercel.app",
+                        "http://localhost:3000"
                 )
-                .allowedMethods("GET", "POST", "PUT", "DELETE", "OPTIONS") // 🔥 OPTIONS 추가 (Preflight 요청 대비)
+                .allowedMethods("GET", "POST", "PUT", "DELETE", "OPTIONS")
                 .allowCredentials(true);
     }
 }
