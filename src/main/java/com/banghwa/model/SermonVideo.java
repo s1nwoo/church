@@ -5,6 +5,8 @@ import lombok.*;
 
 import java.time.LocalDate;
 import java.time.LocalDateTime;
+import java.util.ArrayList;
+import java.util.List;
 
 @Entity
 @Getter
@@ -33,6 +35,10 @@ public class SermonVideo {
 
     @Column(name = "bible_text", length = 100)
     private String bibleText; // 성경 본문 구절
+
+    // 외부 API로 가져온 실제 구절 텍스트를 담기 위한 @Transient 필드
+    @Transient
+    private List<String> bibleVerses = new ArrayList<>();
 
     @Column(columnDefinition = "TEXT")
     private String content; // 설명
