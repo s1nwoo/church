@@ -1,15 +1,15 @@
+// src/main/java/com/banghwa/service/PostServiceImpl.java
 package com.banghwa.service;
 
 import com.banghwa.model.Post;
 import com.banghwa.repository.PostRepository;
 import lombok.RequiredArgsConstructor;
+import org.springframework.data.domain.*;
+import org.springframework.data.jpa.domain.Specification;
 import org.springframework.stereotype.Service;
 
 import java.time.LocalDateTime;
-import java.util.Comparator;
-import java.util.List;
 import java.util.Optional;
-import java.util.stream.Collectors;
 
 @Service
 @RequiredArgsConstructor
@@ -18,17 +18,33 @@ public class PostServiceImpl implements PostService {
     private final PostRepository postRepository;
 
     @Override
-    public List<Post> getAllPosts() {
-        return postRepository.findAll()
-                .stream()
-                .filter(post -> !Boolean.TRUE.equals(post.getDeleted()))
-                .sorted(Comparator.comparing(Post::getCreatedDate).reversed())
-                .collect(Collectors.toList());
+    public Page<Post> searchPosts(String keyword, String category, Pageable pageable) {
+        return postRepository.findAll((Specification<Post>) (root, query, cb) -> {
+            // deleted=false 필터
+            var predicate = cb.equal(root.get("deleted"), false);
+
+            // 카테고리 필터
+            if (category != null && !category.isBlank()) {
+                predicate = cb.and(predicate, cb.equal(root.get("category"), category));
+            }
+
+            // 키워드(제목 or 내용) 필터
+            if (keyword != null && !keyword.isBlank()) {
+                String kw = "%" + keyword + "%";
+                var titleLike   = cb.like(root.get("title"),   kw);
+                var contentLike = cb.like(root.get("content"), kw);
+                predicate = cb.and(predicate, cb.or(titleLike, contentLike));
+            }
+
+            return predicate;
+        }, pageable);
     }
 
     @Override
     public Post getPostById(Long id) {
-        return postRepository.findById(id).orElse(null);
+        return postRepository.findById(id)
+                .filter(p -> !Boolean.TRUE.equals(p.getDeleted()))
+                .orElse(null);
     }
 
     @Override
@@ -41,29 +57,29 @@ public class PostServiceImpl implements PostService {
 
     @Override
     public boolean updatePost(Long id, Post updatedPost) {
-        Optional<Post> optionalPost = postRepository.findById(id);
-        if (optionalPost.isPresent()) {
-            Post post = optionalPost.get();
-            post.setTitle(updatedPost.getTitle());
-            post.setContent(updatedPost.getContent());
-            post.setWriter(updatedPost.getWriter());
-            post.setUpdatedDate(LocalDateTime.now());
-            postRepository.save(post);
-            return true;
+        Optional<Post> existing = postRepository.findById(id);
+        if (existing.isEmpty() || Boolean.TRUE.equals(existing.get().getDeleted())) {
+            return false;
         }
-        return false;
+        Post post = existing.get();
+        post.setTitle(updatedPost.getTitle());
+        post.setWriter(updatedPost.getWriter());
+        post.setContent(updatedPost.getContent());
+        post.setUpdatedDate(LocalDateTime.now());
+        postRepository.save(post);
+        return true;
     }
 
     @Override
     public boolean deletePost(Long id) {
-        Optional<Post> optionalPost = postRepository.findById(id);
-        if (optionalPost.isPresent()) {
-            Post post = optionalPost.get();
-            post.setDeleted(true);
-            post.setDeletedDate(LocalDateTime.now());
-            postRepository.save(post);
-            return true;
+        Optional<Post> existing = postRepository.findById(id);
+        if (existing.isEmpty() || Boolean.TRUE.equals(existing.get().getDeleted())) {
+            return false;
         }
-        return false;
+        Post post = existing.get();
+        post.setDeleted(true);
+        post.setDeletedDate(LocalDateTime.now());
+        postRepository.save(post);
+        return true;
     }
 }

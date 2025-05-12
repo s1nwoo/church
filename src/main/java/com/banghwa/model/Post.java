@@ -20,6 +20,8 @@ public class Post {
 
     private String writer;
 
+    private String category;
+
     @Lob
     @Column(nullable = true)
     private String content;
