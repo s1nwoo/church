@@ -26,7 +26,7 @@ public class Post {
     @Column(nullable = true)
     private String content;
 
-    private LocalDateTime createdDate;   // ✅ 생성일
+    private LocalDateTime createdDate;   // ✅ 생성일 재
     private LocalDateTime updatedDate;   // ✅ 수정일
 
     private Boolean deleted = false;     // ✅ 삭제 여부
