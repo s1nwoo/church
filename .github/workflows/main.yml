@@ -1,6 +1,5 @@
 name: Backend Deploy
 
-# main 브랜치에 push 시 자동 실행
 on:
   push:
     branches: [ main ]
@@ -27,28 +26,25 @@ jobs:
           chmod +x gradlew
           ./gradlew clean build -x test
 
-      # 4. EC2에 JAR 전송
-      - name: Deploy JAR to EC2
-        uses: appleboy/scp-action@v0.1.7
-        with:
-          host: ${{ secrets.EC2_HOST }}
-          username: ${{ secrets.EC2_USERNAME }}
-          key: ${{ secrets.EC2_KEY }}
-          source: "build/libs/church-1.0.0.jar"
-          target: "/app/church"
-          strip_components: 2
+      # 4. SSH 키 파일 생성
+      - name: Setup SSH key
+        run: |
+          mkdir -p ~/.ssh
+          echo "${{ secrets.EC2_KEY }}" > ~/.ssh/ec2_key.pem
+          chmod 600 ~/.ssh/ec2_key.pem
 
-      # 5. EC2에서 서비스 재시작
+      # 5. EC2에 JAR 전송
+      - name: Deploy JAR to EC2
+        run: |
+          scp -i ~/.ssh/ec2_key.pem \
+            -o StrictHostKeyChecking=no \
+            build/libs/church-1.0.0.jar \
+            ${{ secrets.EC2_USERNAME }}@${{ secrets.EC2_HOST }}:/app/church/church.jar
+
+      # 6. EC2에서 서비스 재시작
       - name: Restart Spring Boot
-        uses: appleboy/ssh-action@v1.0.3
-        with:
-          host: ${{ secrets.EC2_HOST }}
-          username: ${{ secrets.EC2_USERNAME }}
-          key: ${{ secrets.EC2_KEY }}
-          script: |
-            # JAR 파일 이름 변경
-            mv /app/church/church-1.0.0.jar /app/church/church.jar
-            # 서비스 재시작
-            sudo systemctl restart church
-            # 재시작 확인
-            sudo systemctl status church
+        run: |
+          ssh -i ~/.ssh/ec2_key.pem \
+            -o StrictHostKeyChecking=no \
+            ${{ secrets.EC2_USERNAME }}@${{ secrets.EC2_HOST }} \
+            "sudo systemctl restart church"
