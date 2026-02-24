@@ -32,6 +32,12 @@ jobs:
           mkdir -p ~/.ssh
           echo "${{ secrets.EC2_KEY }}" > ~/.ssh/ec2_key.pem
           chmod 600 ~/.ssh/ec2_key.pem
+    
+      # 디버그: EC2_HOST 값 확인
+      - name: Debug secrets
+        run: |
+          echo "HOST: '${{ secrets.EC2_HOST }}'"
+          echo "USERNAME: '${{ secrets.EC2_USERNAME }}'"
 
       # 5. EC2에 JAR 전송
       - name: Deploy JAR to EC2
