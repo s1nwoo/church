@@ -23,7 +23,9 @@ jobs:
 
       # 3. Gradle 빌드
       - name: Build with Gradle
-        run: ./gradlew clean build -x test
+        run: |
+          chmod +x gradlew
+          ./gradlew clean build -x test
 
       # 4. EC2에 JAR 전송
       - name: Deploy JAR to EC2
