@@ -36,32 +36,41 @@ public class BibleLocalService {
     }
 
     /**
-     * reference 예: "삼하6:1-10"
-     * -> ["삼하6:1: 본문", ..., "삼하6:10: 본문"]
+     * reference 예: "요3:16" → ["[요3:16] 본문"]
+     *              "요3:16-21" → ["[요3:16] 본문", ..., "[요3:21] 본문"]
+     *              "요3:16, 요5:14-15" → 각 구절 합쳐서 반환
      */
     public List<String> fetchVerses(String reference) {
-        if (versesMap.isEmpty() || reference == null || !reference.contains(":")) {
+        if (versesMap.isEmpty() || reference == null || reference.isBlank()) {
             return Collections.emptyList();
         }
 
         List<String> result = new ArrayList<>();
-        try {
-            // 예: "삼하6:1-10" -> bookChap="삼하6", range="1-10"
-            String[] parts = reference.split(":");
-            String bookChap = parts[0];
-            String[] range = parts[1].split("-");
-            int start = Integer.parseInt(range[0].trim());
-            int end   = (range.length > 1) ? Integer.parseInt(range[1].trim()) : start;
 
-            for (int v = start; v <= end; v++) {
-                String key = bookChap + ":" + v;
-                String verseText = versesMap.get(key);
-                if (verseText != null) {
-                    result.add("[" + key + "] " + verseText);
+        // 쉼표로 분리하여 각 구절을 순서대로 처리
+        String[] refs = reference.split(",");
+        for (String ref : refs) {
+            String trimmed = ref.trim();
+            if (!trimmed.contains(":")) continue; // 잘못된 형식 건너뜀
+
+            try {
+                // 예: "삼하6:1-10" -> bookChap="삼하6", range="1-10"
+                String[] parts = trimmed.split(":");
+                String bookChap = parts[0].trim();
+                String[] range = parts[1].split("-");
+                int start = Integer.parseInt(range[0].trim());
+                int end   = (range.length > 1) ? Integer.parseInt(range[1].trim()) : start;
+
+                for (int v = start; v <= end; v++) {
+                    String key = bookChap + ":" + v;
+                    String verseText = versesMap.get(key);
+                    if (verseText != null) {
+                        result.add("[" + key + "] " + verseText);
+                    }
                 }
+            } catch (Exception e) {
+                // 파싱 에러 시 해당 구절 건너뜀
             }
-        } catch (Exception e) {
-            // 파싱 에러 시 빈 리스트 반환
         }
         return result;
     }
