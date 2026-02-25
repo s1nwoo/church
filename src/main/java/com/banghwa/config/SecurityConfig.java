@@ -31,8 +31,10 @@ public class SecurityConfig {
     @Bean
     public CorsConfigurationSource corsConfigurationSource() {
         CorsConfiguration config = new CorsConfiguration();
-        // Vercel 모든 서브도메인(Preview, Production 등)과 로컬 허용
+        // 운영 도메인 및 로컬 허용
         config.setAllowedOriginPatterns(List.of(
+                "https://bhch.kr",
+                "https://www.bhch.kr",
                 "https://*.vercel.app",
                 "http://localhost:3000"
         ));
