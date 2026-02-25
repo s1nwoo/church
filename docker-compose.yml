@@ -33,5 +33,13 @@ services:
     networks:
       - church-net
 
+  static:
+    image: nginx:alpine
+    container_name: church-static
+    ports:
+      - "5500:80"
+    volumes:
+      - ./_local-images:/usr/share/nginx/html:ro
+
 networks:
   church-net:

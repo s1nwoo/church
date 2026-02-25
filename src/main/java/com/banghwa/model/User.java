@@ -1,5 +1,6 @@
 package com.banghwa.model;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import jakarta.persistence.*;
 import lombok.*;
 import org.springframework.security.core.GrantedAuthority;
@@ -36,6 +37,7 @@ public class User implements UserDetails {
     private String email;
 
     @Column(nullable = false)
+    @JsonIgnore  // ✅ 추가: JSON 응답에서 비밀번호 제외
     private String password;
 
     private String phoneNumber;
@@ -53,10 +55,11 @@ public class User implements UserDetails {
     private LocalDateTime deletedDate;
 
     @Column(nullable = false)
-    private String gender; // "남자" or "여자"
+    private String gender;
 
     // ✅ [Security] 사용자 권한 반환
     @Override
+    @JsonIgnore  // ✅ 추가: JSON 응답에서 authorities 제외
     public Collection<? extends GrantedAuthority> getAuthorities() {
         return List.of(new SimpleGrantedAuthority("ROLE_" + role.name()));
     }
@@ -69,30 +72,35 @@ public class User implements UserDetails {
 
     // ✅ [Security] 사용자 비밀번호
     @Override
+    @JsonIgnore  // ✅ 추가
     public String getPassword() {
         return password;
     }
 
     // ✅ [Security] 계정 만료 여부
     @Override
+    @JsonIgnore  // ✅ 추가
     public boolean isAccountNonExpired() {
         return true;
     }
 
     // ✅ [Security] 계정 잠김 여부
     @Override
+    @JsonIgnore  // ✅ 추가
     public boolean isAccountNonLocked() {
         return true;
     }
 
     // ✅ [Security] 자격 증명 만료 여부
     @Override
+    @JsonIgnore  // ✅ 추가
     public boolean isCredentialsNonExpired() {
         return true;
     }
 
     // ✅ [Security] 계정 활성화 여부
     @Override
+    @JsonIgnore  // ✅ 추가
     public boolean isEnabled() {
         return !deleted;
     }
