@@ -61,6 +61,10 @@ public class User implements UserDetails {
     @Override
     @JsonIgnore  // ✅ 추가: JSON 응답에서 authorities 제외
     public Collection<? extends GrantedAuthority> getAuthorities() {
+        // role이 null인 경우 기본값 USER로 처리
+        if (role == null) {
+            return List.of(new SimpleGrantedAuthority("ROLE_USER"));
+        }
         return List.of(new SimpleGrantedAuthority("ROLE_" + role.name()));
     }
 
@@ -102,6 +106,7 @@ public class User implements UserDetails {
     @Override
     @JsonIgnore  // ✅ 추가
     public boolean isEnabled() {
-        return !deleted;
+        // deleted가 null이면 삭제되지 않은 것으로 처리 (NPE 방지)
+        return deleted == null || !deleted;
     }
 }
