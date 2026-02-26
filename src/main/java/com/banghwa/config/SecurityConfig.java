@@ -35,6 +35,8 @@ public class SecurityConfig {
         config.setAllowedOriginPatterns(List.of(
                 "https://bhch.kr",
                 "https://www.bhch.kr",
+                "https://bhbc.kr",      
+                "https://www.bhbc.kr",
                 "https://*.vercel.app",
                 "http://localhost:3000"
         ));
