@@ -44,3 +44,7 @@ bin/
 ### Mac OS ###
 .DS_Store
 .env
+### 민감한 설정 파일 ###
+src/main/resources/application-prod.yml
+src/main/resources/application-local.yml
+src/main/resources/application-docker.yml
