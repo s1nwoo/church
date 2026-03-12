@@ -6,5 +6,7 @@ import org.springframework.data.jpa.repository.JpaSpecificationExecutor;
 
 public interface SermonVideoRepository extends JpaRepository<SermonVideo, Long>,
         JpaSpecificationExecutor<SermonVideo> {
-    // 검색 조건을 위한 JpaSpecificationExecutor 추가
+
+    // 유튜브 URL 중복 체크용
+    boolean existsByYoutubeUrl(String youtubeUrl);
 }

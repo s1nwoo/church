@@ -65,6 +65,15 @@ dependencies {
 
     // ⭐ PostgreSQL 드라이버 추가
     runtimeOnly 'org.postgresql:postgresql'
+
+    // YouTube Data API
+    implementation 'com.google.apis:google-api-services-youtube:v3-rev20231011-2.0.0'
+    implementation 'com.google.api-client:google-api-client:2.2.0'
+    implementation 'com.google.http-client:google-http-client-jackson2:1.43.3'
+
+    // HTTP 클라이언트 (썸네일 다운로드용)
+    implementation 'org.apache.httpcomponents.client5:httpclient5:5.2.1'
+
 }
 
 test {
