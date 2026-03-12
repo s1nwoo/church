@@ -35,12 +35,12 @@ public class SecurityConfig {
         config.setAllowedOriginPatterns(List.of(
                 "https://bhch.kr",
                 "https://www.bhch.kr",
-                "https://bhbc.kr",      
+                "https://bhbc.kr",
                 "https://www.bhbc.kr",
                 "https://*.vercel.app",
                 "http://localhost:3000"
         ));
-        config.setAllowedMethods(List.of("GET", "POST", "PUT", "DELETE", "OPTIONS"));
+        config.setAllowedMethods(List.of("GET", "POST", "PUT", "DELETE", "PATCH", "OPTIONS"));
         config.setAllowedHeaders(List.of("*"));
         config.setAllowCredentials(true);
 
