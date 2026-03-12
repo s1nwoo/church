@@ -125,8 +125,9 @@ public class BannerCardController {
     /**
      * 순서 일괄 저장
      * 요청 body: [{"id": 1, "sortOrder": 1}, {"id": 2, "sortOrder": 2}, ...]
+     * ⚠️ /reorder 대신 /order 사용 - /{id} PathVariable과 충돌 방지
      */
-    @PatchMapping("/api/admin/banner-cards/reorder")
+    @PatchMapping("/api/admin/banner-cards/order")
     @RolesAllowed("ADMIN")
     public ResponseEntity<List<BannerCard>> reorder(@RequestBody List<ReorderRequest> requests) {
         for (ReorderRequest req : requests) {

@@ -74,6 +74,9 @@ dependencies {
     // HTTP 클라이언트 (썸네일 다운로드용)
     implementation 'org.apache.httpcomponents.client5:httpclient5:5.2.1'
 
+    // ☁️ AWS SDK v2 - S3 이미지 업로드용 (카드 슬라이더 관리)
+    implementation 'software.amazon.awssdk:s3:2.25.0'
+
 }
 
 test {
