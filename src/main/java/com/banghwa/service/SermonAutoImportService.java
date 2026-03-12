@@ -67,10 +67,10 @@ public class SermonAutoImportService {
                     continue;
                 }
 
-                // 6. DB에 저장 ([자동등록] 태그 없이 저장)
+                // 6. DB에 저장 (title 제거 - content를 메인 제목으로 사용)
                 SermonVideo sermon = new SermonVideo();
                 sermon.setYoutubeUrl(video.getYoutubeUrl());
-                sermon.setTitle(sermonInfo.getTitle() != null ? sermonInfo.getTitle() : "제목 미확인");
+                sermon.setContent(sermonInfo.getTitle() != null ? sermonInfo.getTitle() : "제목 미확인");
                 sermon.setPreacher(sermonInfo.getPreacher() != null ? sermonInfo.getPreacher() : "설교자 미확인");
                 sermon.setBibleText(sermonInfo.getBibleVerse() != null ? sermonInfo.getBibleVerse() : "");
                 sermon.setSermonDate(LocalDate.now());

@@ -1,4 +1,3 @@
-// src/main/java/com/banghwa/service/SermonVideoServiceImpl.java
 package com.banghwa.service;
 
 import com.banghwa.model.SermonVideo;
@@ -30,10 +29,11 @@ public class SermonVideoServiceImpl implements SermonVideoService {
 
             if (keyword != null && !keyword.isBlank()) {
                 String like = "%" + keyword + "%";
-                Predicate title    = cb.like(root.get("title"),     like);
+                // title 제거 - content, preacher, bibleText로 검색
+                Predicate content  = cb.like(root.get("content"),  like);
                 Predicate preacher = cb.like(root.get("preacher"), like);
                 Predicate bible    = cb.like(root.get("bibleText"), like);
-                p = cb.and(p, cb.or(title, preacher, bible));
+                p = cb.and(p, cb.or(content, preacher, bible));
             }
             return p;
         }, pageable);
@@ -44,9 +44,6 @@ public class SermonVideoServiceImpl implements SermonVideoService {
     public Optional<SermonVideo> getSermon(Long id) {
         return sermonVideoRepository.findById(id)
                 .map(s -> {
-                    // 기존 필드 그대로 유지
-                    // …
-
                     // bible_text 컬럼 기반으로 bible-kor.json 에서 구절 파싱
                     List<String> verses = bibleLocalService.fetchVerses(s.getBibleText());
                     s.setBibleVerses(verses);
@@ -66,13 +63,12 @@ public class SermonVideoServiceImpl implements SermonVideoService {
         SermonVideo original = sermonVideoRepository.findById(id)
                 .orElseThrow(() -> new IllegalArgumentException("존재하지 않는 설교 ID"));
 
-        // 기존 필드 업데이트
-        original.setTitle(      updated.getTitle());
+        // title 제거 - content를 메인 제목으로 사용
+        original.setContent(    updated.getContent());
         original.setYoutubeUrl( updated.getYoutubeUrl());
         original.setPreacher(   updated.getPreacher());
         original.setSermonDate( updated.getSermonDate());
         original.setBibleText(  updated.getBibleText());
-        original.setContent(    updated.getContent());
 
         // 삭제 여부 플래그 반영
         original.setDeleted(updated.getDeleted());

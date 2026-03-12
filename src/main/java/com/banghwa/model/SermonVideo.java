@@ -21,8 +21,7 @@ public class SermonVideo {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id; // PK: 설교 영상 고유 ID
 
-    @Column(nullable = false, length = 255)
-    private String title; // 영상 제목
+    // title 필드 제거 - content를 메인 제목으로 사용
 
     @Column(name = "youtube_url", nullable = false, length = 255)
     private String youtubeUrl; // YouTube 영상 URL 또는 ID
@@ -41,7 +40,7 @@ public class SermonVideo {
     private List<String> bibleVerses = new ArrayList<>();
 
     @Column(columnDefinition = "TEXT")
-    private String content; // 설명
+    private String content; // 설교 제목 (메인 제목으로 사용)
 
     // ✅ 공통 필드
     @Column(name = "created_date")
