@@ -64,6 +64,7 @@ public class YoutubeService {
                 YoutubeVideoInfo info = new YoutubeVideoInfo();
                 String videoId = item.getSnippet().getResourceId().getVideoId();
                 info.setVideoId(videoId);
+                info.setTitle(item.getSnippet().getTitle());
                 info.setYoutubeUrl("https://www.youtube.com/watch?v=" + videoId);
                 info.setThumbnailUrl("https://img.youtube.com/vi/" + videoId + "/maxresdefault.jpg");
                 info.setPublishedAt(item.getSnippet().getPublishedAt().toString());
@@ -82,6 +83,7 @@ public class YoutubeService {
      */
     public static class YoutubeVideoInfo {
         private String videoId;
+        private String title;
         private String youtubeUrl;
         private String thumbnailUrl;
         private String publishedAt;
@@ -89,6 +91,8 @@ public class YoutubeService {
         // Getters & Setters
         public String getVideoId() { return videoId; }
         public void setVideoId(String videoId) { this.videoId = videoId; }
+        public String getTitle() { return title; }
+        public void setTitle(String title) { this.title = title; }
         public String getYoutubeUrl() { return youtubeUrl; }
         public void setYoutubeUrl(String youtubeUrl) { this.youtubeUrl = youtubeUrl; }
         public String getThumbnailUrl() { return thumbnailUrl; }

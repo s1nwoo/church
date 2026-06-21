@@ -11,13 +11,31 @@ import java.net.URI;
 import java.net.http.HttpClient;
 import java.net.http.HttpRequest;
 import java.net.http.HttpResponse;
+import java.time.Instant;
 import java.time.LocalDate;
+import java.time.ZoneId;
+import java.time.format.DateTimeFormatter;
+import java.time.format.DateTimeFormatterBuilder;
+import java.time.format.ResolverStyle;
+import java.time.temporal.ChronoField;
+import java.util.Locale;
 import java.util.Base64;
 import java.util.List;
 import java.util.Map;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 @Service
 public class SermonAutoImportService {
+
+    private static final ZoneId SEOUL_ZONE = ZoneId.of("Asia/Seoul");
+    private static final Pattern TITLE_DATE_PATTERN = Pattern.compile("(\\d{2})/(\\d{2})/(\\d{2})");
+    private static final DateTimeFormatter TITLE_DATE_FORMATTER = new DateTimeFormatterBuilder()
+            .appendValueReduced(ChronoField.YEAR, 2, 2, 2000)
+            .appendLiteral('/')
+            .appendPattern("MM/dd")
+            .toFormatter(Locale.KOREA)
+            .withResolverStyle(ResolverStyle.STRICT);
 
     private final YoutubeService youtubeService;
     private final SermonVideoRepository sermonVideoRepository;
@@ -73,7 +91,7 @@ public class SermonAutoImportService {
                 sermon.setContent(sermonInfo.getTitle() != null ? sermonInfo.getTitle() : "제목 미확인");
                 sermon.setPreacher(sermonInfo.getPreacher() != null ? sermonInfo.getPreacher() : "설교자 미확인");
                 sermon.setBibleText(sermonInfo.getBibleVerse() != null ? sermonInfo.getBibleVerse() : "");
-                sermon.setSermonDate(LocalDate.now());
+                sermon.setSermonDate(resolveSermonDate(video));
                 sermon.setDeleted(false);
 
                 sermonVideoRepository.save(sermon);
@@ -86,6 +104,42 @@ public class SermonAutoImportService {
         }
 
         return importedCount;
+    }
+
+    private LocalDate resolveSermonDate(YoutubeService.YoutubeVideoInfo video) {
+        LocalDate titleDate = parseSermonDateFromTitle(video.getTitle());
+        if (titleDate != null) {
+            return titleDate;
+        }
+
+        try {
+            return Instant.parse(video.getPublishedAt()).atZone(SEOUL_ZONE).toLocalDate();
+        } catch (Exception e) {
+            System.err.println("영상 공개일 파싱 실패, 오늘 날짜로 저장합니다. publishedAt="
+                    + video.getPublishedAt() + " / " + e.getMessage());
+            return LocalDate.now(SEOUL_ZONE);
+        }
+    }
+
+    private LocalDate parseSermonDateFromTitle(String title) {
+        if (title == null || title.isBlank()) {
+            return null;
+        }
+
+        Matcher matcher = TITLE_DATE_PATTERN.matcher(title);
+        if (!matcher.find()) {
+            return null;
+        }
+
+        String year = matcher.group(1);
+        String month = matcher.group(2);
+        String day = matcher.group(3);
+        try {
+            return LocalDate.parse(year + "/" + month + "/" + day, TITLE_DATE_FORMATTER);
+        } catch (Exception e) {
+            System.err.println("영상 제목 날짜 파싱 실패, 공개일을 사용합니다. title=" + title + " / " + e.getMessage());
+            return null;
+        }
     }
 
     /**
@@ -190,6 +244,16 @@ public class SermonAutoImportService {
 
         // 응답 파싱
         String responseBody = response.body();
+        if (response.statusCode() < 200 || response.statusCode() >= 300) {
+            String reason = switch (response.statusCode()) {
+                case 402 -> "Anthropic 크레딧 또는 결제 상태를 확인해야 합니다.";
+                case 429 -> "Anthropic 요청 한도 또는 사용량 제한에 도달했습니다.";
+                default -> "Anthropic API 호출이 실패했습니다.";
+            };
+            System.err.println(reason + " status=" + response.statusCode() + " body=" + responseBody);
+            throw new RuntimeException(reason + " status=" + response.statusCode());
+        }
+
         System.out.println("Claude API 응답: " + responseBody);
 
         JsonNode root = objectMapper.readTree(responseBody);
