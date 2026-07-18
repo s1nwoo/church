@@ -7,6 +7,7 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Sort;
 import org.springframework.web.bind.annotation.*;
 
 @RestController
@@ -27,7 +28,8 @@ public class SermonVideoController {
             @RequestParam(name = "size",           defaultValue = "10")    int size,
             @RequestParam(name = "includeDeleted", defaultValue = "false") boolean includeDeleted
     ) {
-        Pageable pageable = PageRequest.of(page, size);
+        // 설교 날짜 최신순(같은 날짜는 최근 등록순). 페이지네이션이 페이지 간 일관된 순서를 갖도록 정렬을 명시한다.
+        Pageable pageable = PageRequest.of(page, size, Sort.by(Sort.Direction.DESC, "sermonDate", "id"));
         return sermonVideoService.searchSermons(keyword, pageable, includeDeleted);
     }
 

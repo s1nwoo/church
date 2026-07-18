@@ -185,8 +185,12 @@ public class SermonAutoImportService {
     private SermonInfo extractSermonInfoFromThumbnail(String base64Image) throws Exception {
 
         Map<String, Object> requestBody = Map.of(
-                "model", "claude-sonnet-4-20250514",
+                "model", "claude-sonnet-5",
                 "max_tokens", 500,
+                // 은퇴 모델(claude-sonnet-4-20250514, 2026-06-15 종료)로 인해 자동등록이 404로 실패하던 문제를 해결.
+                // Sonnet 5는 adaptive thinking이 기본 ON이라 응답 content[0]에 thinking 블록이 올 수 있어,
+                // 기존 파싱(content[0].text)과의 호환을 위해 thinking을 명시적으로 비활성화한다.
+                "thinking", Map.of("type", "disabled"),
                 "messages", List.of(
                         Map.of(
                                 "role", "user",
