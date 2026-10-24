@@ -3,6 +3,7 @@
 - 화면: `/admin/bible-ppt` (관리자 메뉴의 **성경 PPT 만들기**)
 - 관리자 로그인에서 사용하는 `accessToken`을 Bearer 헤더로 전송합니다.
 - 모든 `/api/admin/bible-ppt/**` API는 서버에서 `ROLE_ADMIN`을 검사합니다.
+- 구절 입력에는 약자를 사용하고, 슬라이드 제목·미리보기·PPT에는 `창세기 1:1`, `열왕기상 1:1`, `역대상 1:1`처럼 전체 성경 이름을 표시합니다. 합친 구절과 기존 약자 제목도 저장할 때 같은 규칙을 적용합니다.
 
 ## 사용 방법
 
@@ -42,7 +43,7 @@ API:
 - `npm.cmd run build`: 프런트엔드 운영 빌드
 - `npm.cmd test -- --watchAll=false --runInBand`: 자동 생성, 장·절 선택, 이전 요청 취소, 다중 선택, 개별 스타일, 파일명·저장 위치·저장 취소 및 기존 화면 테스트 (33개)
 
-백엔드 PowerShell 명령 (임시 H2 사용, 전체 23개 테스트 및 JAR 빌드):
+백엔드 PowerShell 명령 (임시 H2 사용, 전체 24개 테스트 및 JAR 빌드):
 
 ```powershell
 $env:SPRING_DATASOURCE_URL='jdbc:h2:mem:biblepptqa;MODE=MySQL;DB_CLOSE_DELAY=-1'

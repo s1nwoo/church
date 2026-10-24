@@ -36,13 +36,18 @@ public final class PptGenerator {
 
     /** 텍스트 상자 안쪽 여백(pt). 템플릿 도형에 일괄 적용한다. */
     private static final double TEXT_INSET = 5.0;
+    private static final java.util.regex.Pattern TITLE_REFERENCE = java.util.regex.Pattern.compile(
+            "(?<![\\p{L}\\p{N}])([가-힣]+)\\s*(?=\\d+:)");
 
     private final AppConfig config;
     private final BibleRepository repository;
+    private final java.util.Map<String, String> bookNames;
 
     public PptGenerator(AppConfig config, BibleRepository repository) {
         this.config = config;
         this.repository = repository;
+        this.bookNames = repository.getBooks().stream().collect(java.util.stream.Collectors.toUnmodifiableMap(
+                book -> book.getAbbreviation(), book -> book.getName()));
     }
 
     /**
@@ -75,10 +80,18 @@ public final class PptGenerator {
                 String body = (isFirstChunkOfVerse && !verseNumberLabel.isEmpty())
                         ? verseNumberLabel + " " + chunks.get(i)
                         : chunks.get(i);
-                slides.add(new SlideContent(key, body));
+                slides.add(new SlideContent(displayTitle(key), body));
             }
         }
         return slides;
+    }
+
+    /** Keep shorthand input keys, but show full book names in generated and edited titles. */
+    private String displayTitle(String title) {
+        return TITLE_REFERENCE.matcher(title).replaceAll(match -> {
+            String name = bookNames.get(match.group(1));
+            return java.util.regex.Matcher.quoteReplacement(name == null ? match.group() : name + " ");
+        });
     }
 
     /**
@@ -268,7 +281,7 @@ public final class PptGenerator {
         }
 
         String replaced = safeOriginal
-                .replace(config.getTitlePlaceholder(), content.title())
+                .replace(config.getTitlePlaceholder(), displayTitle(content.title()))
                 .replace(config.getBodyPlaceholder(), content.body());
         textShape.setText(replaced);
         return role;

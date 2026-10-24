@@ -28,7 +28,7 @@ class BiblePptServiceTest {
         var slides = service.build(new BuildRequest("창1:1-3,5 요3:16", 3));
         assertThat(slides).hasSizeGreaterThanOrEqualTo(5);
         assertThat(slides.get(0).body()).startsWith("1 태초에");
-        assertThat(slides).extracting(s -> s.title()).contains("창1:5", "요3:16");
+        assertThat(slides).extracting(s -> s.title()).contains("창세기 1:5", "요한복음 3:16");
         for (String invalid : List.of("창1:1 요999:1", "창1:1-2147483647", "창1:1,", "창1:1-", "창1:0", "")) {
             assertThatThrownBy(() -> service.build(new BuildRequest(invalid, 3)))
                     .isInstanceOf(IllegalArgumentException.class);
@@ -48,10 +48,28 @@ class BiblePptServiceTest {
             assertThat(ppt.getPageSize().height).isEqualTo((int) metadata.height());
             var shapes = ppt.getSlides().get(0).getShapes().stream().filter(s -> s instanceof XSLFTextShape)
                     .map(s -> (XSLFTextShape) s).toList();
-            assertThat(shapes).extracting(XSLFTextShape::getText).contains("창1:1, 창1:2", "1 첫 줄\n2 둘째 줄");
+            assertThat(shapes).extracting(XSLFTextShape::getText).contains("창세기 1:1, 창세기 1:2", "1 첫 줄\n2 둘째 줄");
             var body = shapes.stream().filter(s -> s.getText().startsWith("1 첫 줄")).findFirst().orElseThrow();
             assertThat(body.getTextParagraphs().get(0).getTextRuns().get(0).getFontSize()).isEqualTo(32);
             assertThat(body.getAnchor().getX()).isCloseTo(base.body().x(), within(.01));
+        }
+    }
+
+    @Test void fullBookNamesAppearInGeneratedAndLegacyMergedPptTitles() throws Exception {
+        var built = service.build(new BuildRequest("창1:1 왕상1:1 대상1:1", 0));
+        assertThat(built).extracting(s -> s.title()).containsExactly("창세기 1:1", "열왕기상 1:1", "역대상 1:1");
+        var titles = List.of("창1:1-3", "왕상1:1, 대상1:1", "열왕기상 1:1-2", "예배 말씀");
+        var deck = new Deck(titles.stream().map(t -> new Slide(t, "본문은 창1:1 그대로", null)).toList());
+        try (var ppt = new XMLSlideShow(new ByteArrayInputStream(service.download(deck)))) {
+            var exportedTitles = ppt.getSlides().stream().map(slide -> slide.getShapes().stream()
+                    .filter(s -> s instanceof XSLFTextShape).map(s -> ((XSLFTextShape) s).getText())
+                    .filter(t -> !t.equals("본문은 창1:1 그대로")).findFirst().orElseThrow()).toList();
+            assertThat(exportedTitles).containsExactly("창세기 1:1-3", "열왕기상 1:1, 역대상 1:1", "열왕기상 1:1-2", "예배 말씀");
+        }
+        // Every book uses the existing data's full name, including overlapping abbreviations.
+        for (var book : service.metadata().books()) {
+            var slide = service.build(new BuildRequest(book.getAbbreviation() + "1:1", 0)).get(0);
+            assertThat(slide.title()).isEqualTo(book.getName() + " 1:1");
         }
     }
 
