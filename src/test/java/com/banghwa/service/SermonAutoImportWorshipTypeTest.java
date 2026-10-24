@@ -14,7 +14,7 @@ class SermonAutoImportWorshipTypeTest {
 
     @Test
     void parsesBothWorshipTypesWithoutExternalApiCalls() throws Exception {
-        for (WorshipType type : WorshipType.values()) {
+        for (WorshipType type : new WorshipType[]{WorshipType.SUNDAY, WorshipType.AFTERNOON}) {
             var info = service.parseSermonInfo("{\"isSermon\":true,\"worshipType\":\"" + type + "\"}");
             assertThat(info.isSermon()).isTrue();
             assertThat(info.getWorshipType()).isEqualTo(type);
@@ -23,6 +23,8 @@ class SermonAutoImportWorshipTypeTest {
 
     @Test
     void ambiguousClassificationIsNotAssumedToBeSunday() throws Exception {
+        assertThat(service.parseSermonInfo("{\"isSermon\":false,\"worshipType\":\"COMMUNITY\"}")
+                .getWorshipType()).isNull();
         assertThat(service.parseSermonInfo("{\"isSermon\":true}").getWorshipType()).isNull();
         assertThat(service.parseSermonInfo("{\"isSermon\":true,\"worshipType\":\"UNKNOWN\"}")
                 .getWorshipType()).isNull();

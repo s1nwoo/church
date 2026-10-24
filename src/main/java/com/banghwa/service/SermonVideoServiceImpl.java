@@ -9,6 +9,8 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.domain.Specification;
 import org.springframework.stereotype.Service;
+import org.springframework.http.HttpStatus;
+import org.springframework.web.server.ResponseStatusException;
 
 import java.util.List;
 import java.util.Optional;
@@ -49,6 +51,10 @@ public class SermonVideoServiceImpl implements SermonVideoService {
     public Optional<SermonVideo> getSermon(Long id) {
         return sermonVideoRepository.findById(id)
                 .map(s -> {
+                    if (s.getWorshipType() == WorshipType.COMMUNITY) {
+                        s.setBibleVerses(List.of());
+                        return s;
+                    }
                     // bible_text 컬럼 기반으로 bible-kor.json 에서 구절 파싱
                     List<String> verses = bibleLocalService.fetchVerses(s.getBibleText());
                     s.setBibleVerses(verses);
@@ -59,6 +65,7 @@ public class SermonVideoServiceImpl implements SermonVideoService {
     /** [기능] 설교 등록 */
     @Override
     public SermonVideo createSermon(SermonVideo sermon) {
+        normalizeAndValidate(sermon);
         return sermonVideoRepository.save(sermon);
     }
 
@@ -67,6 +74,9 @@ public class SermonVideoServiceImpl implements SermonVideoService {
     public SermonVideo updateSermon(Long id, SermonVideo updated) {
         SermonVideo original = sermonVideoRepository.findById(id)
                 .orElseThrow(() -> new IllegalArgumentException("존재하지 않는 설교 ID"));
+
+        if (updated.getWorshipType() == null) updated.setWorshipType(original.getWorshipType());
+        normalizeAndValidate(updated);
 
         // title 제거 - content를 메인 제목으로 사용
         original.setContent(    updated.getContent());
@@ -87,6 +97,23 @@ public class SermonVideoServiceImpl implements SermonVideoService {
         }
 
         return sermonVideoRepository.save(original);
+    }
+
+    private void normalizeAndValidate(SermonVideo video) {
+        if (video.getWorshipType() == null) video.setWorshipType(WorshipType.SUNDAY);
+        if (video.getContent() == null || video.getContent().isBlank()
+                || video.getYoutubeUrl() == null || video.getYoutubeUrl().isBlank()
+                || video.getSermonDate() == null) {
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "영상 제목, 유튜브 링크, 영상 날짜를 입력해주세요.");
+        }
+        if (video.getWorshipType() == WorshipType.COMMUNITY) {
+            // Keep the existing NOT NULL column and API compatible; community videos have no preacher.
+            video.setPreacher("");
+            video.setBibleText(null);
+            video.setBibleVerses(List.of());
+        } else if (video.getPreacher() == null || video.getPreacher().isBlank()) {
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "예배 영상의 설교자를 입력해주세요.");
+        }
     }
 
     /** [기능] 설교 삭제 (soft-delete) */

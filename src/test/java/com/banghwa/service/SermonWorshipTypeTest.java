@@ -19,13 +19,16 @@ import java.time.LocalDate;
 import java.util.UUID;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.verifyNoInteractions;
 
 class SermonWorshipTypeTest {
     private SessionFactory factory;
     private EntityManager em;
     private SermonVideoRepository repository;
     private SermonVideoServiceImpl service;
+    private BibleLocalService bibleService;
 
     @BeforeEach
     void upgradeExistingDatabase() throws Exception {
@@ -59,7 +62,8 @@ class SermonWorshipTypeTest {
         em = factory.createEntityManager();
         em.getTransaction().begin();
         repository = new JpaRepositoryFactory(em).getRepository(SermonVideoRepository.class);
-        service = new SermonVideoServiceImpl(repository, mock(BibleLocalService.class));
+        bibleService = mock(BibleLocalService.class);
+        service = new SermonVideoServiceImpl(repository, bibleService);
     }
 
     @AfterEach
@@ -114,7 +118,7 @@ class SermonWorshipTypeTest {
     @Test
     void omittedOrNullTypeDefaultsToSundayOnCreate() {
         var sermon = SermonVideo.builder().youtubeUrl("https://youtu.be/default0001")
-                .preacher("설교자").sermonDate(LocalDate.of(2026, 10, 18)).deleted(false).build();
+                .content("새 설교").preacher("설교자").sermonDate(LocalDate.of(2026, 10, 18)).deleted(false).build();
         assertThat(sermon.getWorshipType()).isEqualTo(WorshipType.SUNDAY);
         sermon.setWorshipType(null);
         service.createSermon(sermon);
@@ -122,6 +126,50 @@ class SermonWorshipTypeTest {
         em.clear();
         assertThat(repository.findById(sermon.getId()).orElseThrow().getWorshipType())
                 .isEqualTo(WorshipType.SUNDAY);
+    }
+
+    @Test
+    void communityVideoCanBeCreatedWithoutPreacherOrBibleAndQueriedSeparately() {
+        var video = SermonVideo.builder().content("공동체 가을 행사").worshipType(WorshipType.COMMUNITY)
+                .youtubeUrl("https://youtu.be/community01").sermonDate(LocalDate.of(2026, 10, 18))
+                .deleted(false).build();
+        service.createSermon(video);
+        em.flush();
+        em.clear();
+        var saved = service.getSermon(video.getId()).orElseThrow();
+        assertThat(saved.getWorshipType()).isEqualTo(WorshipType.COMMUNITY);
+        assertThat(saved.getPreacher()).isEmpty();
+        assertThat(saved.getBibleText()).isNull();
+        assertThat(saved.getBibleVerses()).isEmpty();
+        verifyNoInteractions(bibleService);
+        assertThat(service.searchSermons("가을", PageRequest.of(0, 10), false, WorshipType.COMMUNITY)
+                .getContent()).extracting(SermonVideo::getId).containsExactly(video.getId());
+        assertThat(service.searchSermons("", PageRequest.of(0, 10), false, WorshipType.SUNDAY)
+                .getTotalElements()).isEqualTo(1);
+    }
+
+    @Test
+    void changingSermonToCommunityClearsSermonOnlyData() {
+        var old = repository.findAll().get(0);
+        var updated = SermonVideo.builder().content("공동체 행사").worshipType(WorshipType.COMMUNITY)
+                .youtubeUrl(old.getYoutubeUrl()).sermonDate(old.getSermonDate())
+                .preacher("기존 설교자").bibleText("요3:16").deleted(false).build();
+        service.updateSermon(old.getId(), updated);
+        em.flush();
+        em.clear();
+        var saved = service.getSermon(old.getId()).orElseThrow();
+        assertThat(saved.getPreacher()).isEmpty();
+        assertThat(saved.getBibleText()).isNull();
+        verifyNoInteractions(bibleService);
+    }
+
+    @Test
+    void worshipVideosStillRequireAPreacher() {
+        var video = SermonVideo.builder().content("설교").worshipType(WorshipType.AFTERNOON)
+                .youtubeUrl("https://youtu.be/afternoon01").sermonDate(LocalDate.of(2026, 10, 18)).build();
+        assertThatThrownBy(() -> service.createSermon(video))
+                .isInstanceOf(org.springframework.web.server.ResponseStatusException.class)
+                .hasMessageContaining("설교자");
     }
 
     private void save(String title, WorshipType type, boolean deleted) {
