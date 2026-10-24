@@ -23,15 +23,15 @@ class BiblePptSecurityTest {
     @MockBean JwtUtil jwtUtil;
     @MockBean UserRepository users;
 
-    @Test void anonymousCannotReadOrGenerate() throws Exception { denied(); }
-    @Test @WithMockUser(roles = "USER") void memberCannotReadOrGenerate() throws Exception { denied(); }
+    @Test void anonymousCannotReadOrGenerate() throws Exception { denied(401); }
+    @Test @WithMockUser(roles = "USER") void memberCannotReadOrGenerate() throws Exception { denied(403); }
 
-    private void denied() throws Exception {
-        mvc.perform(get("/api/admin/bible-ppt/metadata")).andExpect(status().isForbidden());
-        mvc.perform(get("/api/admin/bible-ppt/books/창/ranges")).andExpect(status().isForbidden());
+    private void denied(int expectedStatus) throws Exception {
+        mvc.perform(get("/api/admin/bible-ppt/metadata")).andExpect(status().is(expectedStatus));
+        mvc.perform(get("/api/admin/bible-ppt/books/창/ranges")).andExpect(status().is(expectedStatus));
         for (String endpoint : new String[]{"slides", "preview", "download"}) {
             mvc.perform(post("/api/admin/bible-ppt/" + endpoint).contentType("application/json").content("{}"))
-                    .andExpect(status().isForbidden());
+                    .andExpect(status().is(expectedStatus));
         }
         verifyNoInteractions(service);
     }
