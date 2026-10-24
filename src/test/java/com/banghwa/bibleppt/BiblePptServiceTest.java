@@ -16,6 +16,14 @@ class BiblePptServiceTest {
     private static BiblePptService service;
     @BeforeAll static void setup() throws Exception { service = new BiblePptService(); }
 
+    @Test void rangePickerUsesOnlyExistingChaptersAndVerses() {
+        var genesis = service.ranges("창");
+        assertThat(genesis).hasSize(50);
+        assertThat(genesis.get(1)).hasSize(31).contains(1, 31).doesNotContain(32);
+        assertThat(service.ranges("시").get(119)).hasSize(176);
+        assertThatThrownBy(() -> service.ranges("없는책")).isInstanceOf(IllegalArgumentException.class);
+    }
+
     @Test void buildsRealVersesAndRejectsPartialOrUnboundedInput() {
         var slides = service.build(new BuildRequest("창1:1-3,5 요3:16", 3));
         assertThat(slides).hasSizeGreaterThanOrEqualTo(5);

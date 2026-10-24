@@ -24,6 +24,11 @@ public class BiblePptController {
     @GetMapping("/metadata")
     public Metadata metadata() { return service.metadata(); }
 
+    @GetMapping("/books/{abbreviation}/ranges")
+    public Map<Integer, List<Integer>> ranges(@PathVariable String abbreviation) {
+        return service.ranges(abbreviation);
+    }
+
     @PostMapping("/slides")
     public List<SlideContent> slides(@RequestBody BuildRequest request) { return service.build(request); }
 

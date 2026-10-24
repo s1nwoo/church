@@ -28,6 +28,7 @@ class BiblePptSecurityTest {
 
     private void denied() throws Exception {
         mvc.perform(get("/api/admin/bible-ppt/metadata")).andExpect(status().isForbidden());
+        mvc.perform(get("/api/admin/bible-ppt/books/창/ranges")).andExpect(status().isForbidden());
         for (String endpoint : new String[]{"slides", "preview", "download"}) {
             mvc.perform(post("/api/admin/bible-ppt/" + endpoint).contentType("application/json").content("{}"))
                     .andExpect(status().isForbidden());

@@ -52,6 +52,14 @@ public class BiblePptService {
 
     public Metadata metadata() { return metadata; }
 
+    public java.util.Map<Integer, List<Integer>> ranges(String abbreviation) {
+        var chapters = repository.getChapters(abbreviation);
+        require(!chapters.isEmpty(), "성경 이름을 확인해 주세요.");
+        var ranges = new java.util.LinkedHashMap<Integer, List<Integer>>();
+        chapters.forEach(chapter -> ranges.put(chapter, repository.getVerses(abbreviation, chapter)));
+        return java.util.Collections.unmodifiableMap(ranges);
+    }
+
     public List<SlideContent> build(BuildRequest request) {
         require(request != null && request.reference() != null && !request.reference().isBlank(), "성경 구절을 입력해 주세요.");
         require(request.reference().length() <= 2000, "구절 입력은 2,000자 이내로 입력해 주세요.");
