@@ -15,6 +15,9 @@ RUN ./gradlew bootJar --no-daemon
 # Step 2: 실행 이미지
 FROM eclipse-temurin:17-jdk-alpine
 
+# AWT/POI renders the bundled Korean font for PPT previews in headless Linux.
+RUN apk add --no-cache fontconfig freetype
+
 WORKDIR /app
 
 # 빌드된 JAR 복사
