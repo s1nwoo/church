@@ -32,6 +32,12 @@ public class SermonVideo {
     @Column(name = "sermon_date", nullable = false)
     private LocalDate sermonDate; // 설교 날짜
 
+    @Builder.Default
+    @Enumerated(EnumType.STRING)
+    @Column(name = "worship_type", nullable = false,
+            columnDefinition = "varchar(20) default 'SUNDAY'")
+    private WorshipType worshipType = WorshipType.SUNDAY;
+
     @Column(name = "bible_text", length = 100)
     private String bibleText; // 성경 본문 구절
 
@@ -57,6 +63,7 @@ public class SermonVideo {
 
     @PrePersist
     public void prePersist() {
+        if (this.worshipType == null) this.worshipType = WorshipType.SUNDAY;
         this.createdDate = LocalDateTime.now();
     }
 

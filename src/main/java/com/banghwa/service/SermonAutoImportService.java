@@ -1,6 +1,7 @@
 package com.banghwa.service;
 
 import com.banghwa.model.SermonVideo;
+import com.banghwa.model.WorshipType;
 import com.banghwa.repository.SermonVideoRepository;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -80,7 +81,7 @@ public class SermonAutoImportService {
                 SermonInfo sermonInfo = extractSermonInfoFromThumbnail(base64Image);
 
                 // 5. 설교 영상이 아니면 건너뜀
-                if (!sermonInfo.isSermon()) {
+                if (!sermonInfo.isSermon() || sermonInfo.getWorshipType() == null) {
                     System.out.println("설교 영상 아님, 건너뜀: " + video.getYoutubeUrl());
                     continue;
                 }
@@ -92,6 +93,7 @@ public class SermonAutoImportService {
                 sermon.setPreacher(sermonInfo.getPreacher() != null ? sermonInfo.getPreacher() : "설교자 미확인");
                 sermon.setBibleText(sermonInfo.getBibleVerse() != null ? sermonInfo.getBibleVerse() : "");
                 sermon.setSermonDate(resolveSermonDate(video));
+                sermon.setWorshipType(sermonInfo.getWorshipType());
                 sermon.setDeleted(false);
 
                 sermonVideoRepository.save(sermon);
@@ -212,14 +214,21 @@ public class SermonAutoImportService {
                                 
                                 {
                                   "isSermon": true,
+                                  "worshipType": "SUNDAY 또는 AFTERNOON",
                                   "title": "설교 제목 (보이는 텍스트 그대로)",
                                   "preacher": "설교자 이름 (예: 김성휘 목사님)",
                                   "bibleVerse": "성경구절 약어 (예: 행8:26-40, 겔47:1-12, 요3:16)"
                                 }
                                 
                                 isSermon 판단 기준:
-                                - 썸네일에 "주일예배" 텍스트가 있으면 true
+                                - 썸네일에 "주일예배", "주일오전예배", "오후예배", "주일오후예배" 텍스트가 있으면 true
                                 - 공동체영상, 찬양, 행사 등이면 false
+
+                                worshipType 판단 기준:
+                                - "오후예배" 또는 "주일오후예배"이면 AFTERNOON (띄어쓰기와 무관)
+                                - "주일예배" 또는 "주일오전예배"이면 SUNDAY
+                                - "주일"과 "오후"가 함께 있으면 AFTERNOON을 우선한다.
+                                - 예배 구분을 확인할 수 없으면 null (추측하지 않는다).
                                 
                                 bibleVerse 형식 규칙:
                                 - 반드시 약어 사용 (행, 창, 요, 겔, 삼하, 에스겔X → 겔O)
@@ -273,10 +282,17 @@ public class SermonAutoImportService {
         // 백틱 제거 (Claude가 ```json ... ``` 형식으로 반환할 때 대비)
         content = content.replaceAll("```json", "").replaceAll("```", "").trim();
 
-        // JSON 파싱
+        return parseSermonInfo(content);
+    }
+
+    SermonInfo parseSermonInfo(String content) throws Exception {
         JsonNode infoNode = objectMapper.readTree(content);
         SermonInfo info = new SermonInfo();
         info.setIsSermon(infoNode.path("isSermon").asBoolean(false));
+        String worshipType = infoNode.path("worshipType").asText("");
+        if ("SUNDAY".equals(worshipType) || "AFTERNOON".equals(worshipType)) {
+            info.setWorshipType(WorshipType.valueOf(worshipType));
+        }
         info.setTitle(infoNode.path("title").asText(null));
         info.setPreacher(infoNode.path("preacher").asText(null));
         info.setBibleVerse(infoNode.path("bibleVerse").asText(null));
@@ -289,11 +305,14 @@ public class SermonAutoImportService {
      */
     public static class SermonInfo {
         private boolean isSermon;
+        private WorshipType worshipType;
         private String title;
         private String preacher;
         private String bibleVerse;
 
         public boolean isSermon() { return isSermon; }
+        public WorshipType getWorshipType() { return worshipType; }
+        public void setWorshipType(WorshipType worshipType) { this.worshipType = worshipType; }
         public void setIsSermon(boolean isSermon) { this.isSermon = isSermon; }
         public String getTitle() { return title; }
         public void setTitle(String title) { this.title = title; }

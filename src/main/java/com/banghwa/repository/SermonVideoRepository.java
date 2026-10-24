@@ -1,6 +1,7 @@
 package com.banghwa.repository;
 
 import com.banghwa.model.SermonVideo;
+import com.banghwa.model.WorshipType;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.JpaSpecificationExecutor;
 
@@ -12,5 +13,5 @@ public interface SermonVideoRepository extends JpaRepository<SermonVideo, Long>,
     // YouTube URL duplicate check.
     boolean existsByYoutubeUrl(String youtubeUrl);
 
-    boolean existsBySermonDateAndDeletedFalse(LocalDate sermonDate);
+    boolean existsBySermonDateAndWorshipTypeAndDeletedFalse(LocalDate sermonDate, WorshipType worshipType);
 }

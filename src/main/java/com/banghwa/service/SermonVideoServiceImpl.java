@@ -1,6 +1,7 @@
 package com.banghwa.service;
 
 import com.banghwa.model.SermonVideo;
+import com.banghwa.model.WorshipType;
 import com.banghwa.repository.SermonVideoRepository;
 import jakarta.persistence.criteria.Predicate;
 import lombok.RequiredArgsConstructor;
@@ -21,11 +22,15 @@ public class SermonVideoServiceImpl implements SermonVideoService {
 
     /** [기능] 전체 + 검색 + 최신순 정렬 */
     @Override
-    public Page<SermonVideo> searchSermons(String keyword, Pageable pageable, boolean includeDeleted) {
+    public Page<SermonVideo> searchSermons(String keyword, Pageable pageable, boolean includeDeleted, WorshipType worshipType) {
         return sermonVideoRepository.findAll((Specification<SermonVideo>) (root, query, cb) -> {
             Predicate p = includeDeleted
                     ? cb.conjunction()
                     : cb.equal(root.get("deleted"), false);
+
+            if (worshipType != null) {
+                p = cb.and(p, cb.equal(root.get("worshipType"), worshipType));
+            }
 
             if (keyword != null && !keyword.isBlank()) {
                 String like = "%" + keyword + "%";
@@ -68,6 +73,9 @@ public class SermonVideoServiceImpl implements SermonVideoService {
         original.setYoutubeUrl( updated.getYoutubeUrl());
         original.setPreacher(   updated.getPreacher());
         original.setSermonDate( updated.getSermonDate());
+        if (updated.getWorshipType() != null) {
+            original.setWorshipType(updated.getWorshipType());
+        }
         original.setBibleText(  updated.getBibleText());
 
         // 삭제 여부 플래그 반영

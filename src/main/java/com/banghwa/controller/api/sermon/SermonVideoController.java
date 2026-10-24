@@ -1,6 +1,7 @@
 package com.banghwa.controller.api.sermon;
 
 import com.banghwa.model.SermonVideo;
+import com.banghwa.model.WorshipType;
 import com.banghwa.service.SermonVideoService;
 import jakarta.annotation.security.RolesAllowed;
 import lombok.RequiredArgsConstructor;
@@ -26,11 +27,12 @@ public class SermonVideoController {
             @RequestParam(name = "keyword",        defaultValue = "")      String keyword,
             @RequestParam(name = "page",           defaultValue = "0")     int page,
             @RequestParam(name = "size",           defaultValue = "10")    int size,
-            @RequestParam(name = "includeDeleted", defaultValue = "false") boolean includeDeleted
+            @RequestParam(name = "includeDeleted", defaultValue = "false") boolean includeDeleted,
+            @RequestParam(name = "worshipType", required = false) WorshipType worshipType
     ) {
         // 설교 날짜 최신순(같은 날짜는 최근 등록순). 페이지네이션이 페이지 간 일관된 순서를 갖도록 정렬을 명시한다.
         Pageable pageable = PageRequest.of(page, size, Sort.by(Sort.Direction.DESC, "sermonDate", "id"));
-        return sermonVideoService.searchSermons(keyword, pageable, includeDeleted);
+        return sermonVideoService.searchSermons(keyword, pageable, includeDeleted, worshipType);
     }
 
     @GetMapping("/{id}")

@@ -1,6 +1,7 @@
 package com.banghwa.scheduler;
 
 import com.banghwa.repository.SermonVideoRepository;
+import com.banghwa.model.WorshipType;
 import com.banghwa.service.SermonAutoImportService;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Component;
@@ -37,18 +38,19 @@ public class YoutubeImportScheduler {
     }
 
     /**
-     * 오후 2시 실행 때 해당 일요일 설교가 없었던 경우를 위해 저녁에 한 번만 재시도한다.
-     * 이미 해당 설교일 영상이 있으면 AI 분석 호출 없이 종료해 크레딧을 아낀다.
+     * 주일예배 또는 오후예배가 아직 없으면 저녁에 한 번 더 조회한다.
+     * 두 예배가 모두 등록되어 있으면 AI 분석 호출 없이 종료한다.
      */
     @Scheduled(cron = "0 0 20 * * SUN", zone = "Asia/Seoul")
     public void retryAutoImportSermonsIfMissing() {
         LocalDate today = LocalDate.now(SEOUL_ZONE);
-        if (sermonVideoRepository.existsBySermonDateAndDeletedFalse(today)) {
-            System.out.println("===== 일요일 저녁 재시도 생략: 이미 등록된 설교가 있습니다. sermonDate=" + today + " =====");
+        if (sermonVideoRepository.existsBySermonDateAndWorshipTypeAndDeletedFalse(today, WorshipType.SUNDAY)
+                && sermonVideoRepository.existsBySermonDateAndWorshipTypeAndDeletedFalse(today, WorshipType.AFTERNOON)) {
+            System.out.println("===== 일요일 저녁 재시도 생략: 두 예배가 모두 등록되어 있습니다. sermonDate=" + today + " =====");
             return;
         }
 
-        System.out.println("===== 일요일 저녁 재시도 시작: 아직 등록된 설교가 없습니다. sermonDate=" + today + " =====");
+        System.out.println("===== 일요일 저녁 재시도 시작: 미등록 예배를 확인합니다. sermonDate=" + today + " =====");
         int count = sermonAutoImportService.importLatestSermons();
         System.out.println("===== 일요일 저녁 재시도 완료: " + count + "개 =====");
     }
