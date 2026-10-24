@@ -4,6 +4,8 @@ import jakarta.persistence.*;
 import lombok.*;
 
 import java.time.LocalDateTime;
+import java.util.ArrayList;
+import java.util.List;
 
 @Entity
 @Getter @Setter
@@ -29,7 +31,16 @@ public class Post {
     private LocalDateTime createdDate;   // ✅ 생성일 재
     private LocalDateTime updatedDate;   // ✅ 수정일
 
+    @Builder.Default
     private Boolean deleted = false;     // ✅ 삭제 여부
+
+    @Builder.Default
+    @Column(nullable = false, columnDefinition = "boolean default false")
+    private Boolean adminOnly = false;
+
+    @Builder.Default
+    @OneToMany(mappedBy = "post", cascade = CascadeType.ALL, orphanRemoval = true, fetch = FetchType.EAGER)
+    private List<PostAttachment> attachments = new ArrayList<>();
     private LocalDateTime deletedDate;   // ✅ 삭제일
 
     @PrePersist

@@ -3,7 +3,7 @@ package com.banghwa.controller.api.post;
 
 import com.banghwa.model.Post;
 import com.banghwa.service.PostService;
-import jakarta.annotation.security.RolesAllowed;
+import org.springframework.security.access.prepost.PreAuthorize;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
@@ -41,7 +41,7 @@ public class PostApiController {
 
     /** [기능] 게시글 등록 */
     @PostMapping
-    @RolesAllowed("ADMIN")
+    @PreAuthorize("hasRole('ADMIN')")
     public ResponseEntity<Post> createPost(@RequestBody Post post) {
         Post saved = postService.savePost(post);
         return ResponseEntity.ok(saved);
@@ -54,12 +54,12 @@ public class PostApiController {
         if (post == null) {
             return ResponseEntity.notFound().build();
         }
-        return ResponseEntity.ok(post);
+        return ResponseEntity.ok().cacheControl(org.springframework.http.CacheControl.noStore()).body(post);
     }
 
     /** [기능] 게시글 수정 */
     @PutMapping("/{id}")
-    @RolesAllowed("ADMIN")
+    @PreAuthorize("hasRole('ADMIN')")
     public ResponseEntity<Post> updatePost(
             @PathVariable("id") Long id,
             @RequestBody Post updatedPost
@@ -72,7 +72,7 @@ public class PostApiController {
 
     /** [기능] 게시글 삭제 (soft-delete) */
     @DeleteMapping("/{id}")
-    @RolesAllowed("ADMIN")
+    @PreAuthorize("hasRole('ADMIN')")
     public ResponseEntity<Void> deletePost(@PathVariable("id") Long id) {
         boolean deleted = postService.deletePost(id);
         return deleted

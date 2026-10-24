@@ -61,6 +61,7 @@ public class SecurityConfig {
                 .authorizeHttpRequests(auth -> auth
                         .requestMatchers("/api/auth/**").permitAll()
                         .requestMatchers("/api/admin/bible-ppt/**").hasRole("ADMIN")
+                        .requestMatchers("/api/admin/posts", "/api/admin/posts/**").hasRole("ADMIN")
                         .requestMatchers("/api/bible-practice/**").authenticated()
                         .requestMatchers("/api/profile/**").authenticated() // ✅ 내 정보 API 인증 필요
                         .anyRequest().permitAll()

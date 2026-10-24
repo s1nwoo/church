@@ -15,9 +15,13 @@ public interface PostService {
      * @param pageable  페이지 번호, 크기, 정렬 정보
      */
     Page<Post> searchPosts(String keyword, String category, Pageable pageable);
+    Page<Post> searchAdminPosts(String keyword, String category, Boolean adminOnly, Pageable pageable);
 
     Post getPostById(Long id);
     Post savePost(Post post);
     boolean updatePost(Long id, Post updatedPost);
     boolean deletePost(Long id);
+    Post saveWithAttachments(Post post, java.util.List<org.springframework.web.multipart.MultipartFile> files);
+    Post updateWithAttachments(Long id, Post post, java.util.List<org.springframework.web.multipart.MultipartFile> files, java.util.List<Long> removeIds);
+    com.banghwa.model.PostAttachment getAttachment(Long postId, Long attachmentId);
 }
